@@ -1,8 +1,18 @@
 package it.unibo.client;
 
+import java.awt.event.ActionListener;
+
+import javax.swing.JPanel;
+import javax.swing.JTable;
+
+import org.apache.jasper.tagplugins.jstl.core.Redirect;
+
 import it.unibo.shared.FieldVerifier;
+
+import com.gargoylesoftware.htmlunit.javascript.host.Element;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -11,11 +21,14 @@ import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.sun.java.swing.plaf.windows.resources.windows;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -42,67 +55,43 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final Button cloudButton = new Button("Google Cloud SQL");
 		final Button wekaButton = new Button("Weka");
 		final Button predictionButton = new Button("Google Prediction API");
-		final Label errorLabel = new Label();
-
+		final Label output = new Label("");
+		final Label output1 = new Label("");
+		final VerticalPanel vPanel = new VerticalPanel();
+		final Grid table = new Grid();
+		
 		// We can add style names to widgets
-		cloudButton.addStyleName("sendButton");
-		wekaButton.addStyleName("sendButton");
-		predictionButton.addStyleName("sendButton");
+		cloudButton.addStyleName("button");
+		wekaButton.addStyleName("button");
+		predictionButton.addStyleName("button");
+		cloudButton.setTitle("Cloud");
+		wekaButton.setTitle("Weka");
+		predictionButton.setTitle("Prediction");
 
 		// Add the nameField and sendButton to the RootPanel
 		// Use RootPanel.get() to get the entire body element
 		RootPanel.get("googleCloudSQL").add(cloudButton);
 		RootPanel.get("weka").add(wekaButton);
 		RootPanel.get("googlePredictionAPI").add(predictionButton);
+		
 
 		// Focus the cursor on the cloudButton when the app loads
 		cloudButton.setFocus(true);
 
 		// Create a handler for the sendButton and nameField
 		class MyHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on the sendButton.
-			 */
 			public void onClick(ClickEvent event) {
-				sendNameToServer();
-			}
-
-			/**
-			 * Send the name from the nameField to the server and wait for a response.
-			 */
-			private void sendNameToServer() {
-				// First, we validate the input.
-				errorLabel.setText("");
-				String textToServer = nameField.getText();
-				if (!FieldVerifier.isValidName(textToServer)) {
-					errorLabel.setText("Please enter at least four characters");
-					return;
-				}
-
-				// Then, we send the input to the server.
-				sendButton.setEnabled(false);
-				textToServerLabel.setText(textToServer);
-				serverResponseLabel.setText("");
-				greetingService.greetServer(textToServer,
-						new AsyncCallback<String>() {
-							public void onFailure(Throwable caught) {
-								// Show the RPC error message to the user
-								serverResponseLabel.addStyleName("serverResponseLabelError");
-								serverResponseLabel.setHTML(SERVER_ERROR);
-							}
-
-							public void onSuccess(String result) {
-								serverResponseLabel.removeStyleName("serverResponseLabelError");
-								serverResponseLabel.setHTML(result);
-							}
-						});
+				Button b = (Button)event.getSource();
+				output.setText("Nome: " + b.getTitle());				
+				RootPanel.get("content").add(output);
 			}
 		}
-
+		
 		// Add a handler to send the name to the server
 		MyHandler handler = new MyHandler();
 		cloudButton.addClickHandler(handler);
 		wekaButton.addClickHandler(handler);
 		predictionButton.addClickHandler(handler);
 	}
+	
 }

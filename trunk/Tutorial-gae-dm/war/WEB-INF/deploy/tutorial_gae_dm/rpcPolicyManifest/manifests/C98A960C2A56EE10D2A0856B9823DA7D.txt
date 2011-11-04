@@ -1,0 +1,2 @@
+serviceClass: it.unibo.client.GreetingService
+path: A66D7A90DCFDDC0E661D56F0C7ECFCA6.gwt.rpc
