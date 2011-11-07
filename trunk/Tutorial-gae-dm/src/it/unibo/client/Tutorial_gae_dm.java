@@ -89,7 +89,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final VerticalPanel vSxPanel = new VerticalPanel();
 		final Grid table = new Grid();
 		final VerticalPanel vFormPanel = new VerticalPanel();
-		final FormPanel formGuest = new FormPanel();
+		final FormPanel formGuest = new FormPanel("");
 		formGuest.setEncoding(FormPanel.ENCODING_URLENCODED);
 		formGuest.setMethod(FormPanel.METHOD_POST);
 		formGuest.setAction("/sendGuestbook");
