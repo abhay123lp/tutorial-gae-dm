@@ -15,6 +15,7 @@ import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
+import com.google.gwt.safehtml.shared.SafeUri;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -32,7 +33,13 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class Tutorial_gae_dm implements EntryPoint {
-
+	/**
+	 * The message displayed to the user when the server cannot be reached or
+	 * returns an error.
+	 */
+	private static final String SERVER_ERROR = "An error occurred while "
+			+ "attempting to contact the server. Please check your network "
+			+ "connection and try again.";
 	/**
 	 * Create a remote service proxy to talk to the server-side Greeting service.
 	 */
@@ -82,10 +89,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final VerticalPanel vSxPanel = new VerticalPanel();
 		final Grid table = new Grid();
 		final VerticalPanel vFormPanel = new VerticalPanel();
-		final FormPanel formGuest = new FormPanel("sign");
+		final FormPanel formGuest = new FormPanel();
 		formGuest.setEncoding(FormPanel.ENCODING_URLENCODED);
 		formGuest.setMethod(FormPanel.METHOD_POST);
-		formGuest.setAction("/sendGuestbook"); 
+		formGuest.setAction("/sendGuestbook");
 
 		// E' stato premuto il bottone per vedere il tutorial di "Google Cloud SQL"
 		greetingService.dataCloud(new AsyncCallback<Vector<RecordQuestbook>>() {
@@ -137,8 +144,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 				// Fallimento.
 				// Pulisco il contenuto della pagina HTML.
 				RootPanel.get("content").clear();
-				
-				RootPanel.get("content").add(new Label("Fallimento"));
+				Window.alert(SERVER_ERROR);
 			}
 		});		
 	}

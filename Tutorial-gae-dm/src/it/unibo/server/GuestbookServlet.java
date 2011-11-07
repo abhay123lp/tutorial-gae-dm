@@ -40,14 +40,18 @@ public class GuestbookServlet extends HttpServlet{
 	    		// Preparo l'istruzione SQL da eseguire.
 	    		String statement ="INSERT INTO entries (guestName, content) VALUES( ? , ? )";
 	    		PreparedStatement stmt = c.prepareStatement(statement);
+	    		// Setto i parametri della form nell'istruzione SQL.
 	    		stmt.setString(1, guestName);
 	    		stmt.setString(2, content);
 	    		int success = 2;
+	    		// Eseguo l'SQL.
 	    		success = stmt.executeUpdate();
 	    		if(success == 1) {
+	    			// L'istruzione e' andata a buon fine.
 	    			out.println("<html><head></head><body>Success! Redirecting in 3 seconds...</body></html>");
 	    		} 
 	    		else if (success == 0) {
+	    			// L'istruzione non andata a buon fine.
 	    			out.println("<html><head></head><body>Failure! Please try again! Redirecting in 3 seconds...</body></html>");
 	    		}
 	    	}
@@ -64,6 +68,7 @@ public class GuestbookServlet extends HttpServlet{
 	            }
 	    	}
 	    }
+	    // Faccio il refresh della pagina.
 	    if(Utility.isStartLocal())
 	    	resp.setHeader("Refresh","3; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
 	    else

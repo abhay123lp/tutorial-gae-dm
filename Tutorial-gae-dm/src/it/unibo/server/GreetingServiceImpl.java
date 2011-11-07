@@ -20,20 +20,22 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 public class GreetingServiceImpl extends RemoteServiceServlet implements GreetingService {
 	
 	public Vector<RecordQuestbook> dataCloud() {
+		// Dati della guestbook.
 		Vector<RecordQuestbook> listGuestbook = new Vector<RecordQuestbook>();
 		Connection c = null;
 		
 		try {
-			// Imposto la connessione
+			// Imposto la connessione.
 	    	DriverManager.registerDriver(new AppEngineDriver());
 	    	if(Utility.isStartLocal())
-		    	// Connessione locale
+		    	// Connessione locale.
 		    	c = DriverManager.getConnection("jdbc:google:rdbms://localhost:3306/guestbook","root","fabio.magnani3");
 	    	else
-	    		// Connessione remoto
+	    		// Connessione remoto.
 	    		c = DriverManager.getConnection("jdbc:google:rdbms://tutorial-id:firstinstance/guestbook");
 	    	ResultSet rs = c.createStatement().executeQuery("SELECT * FROM entries");
 	    	while (rs.next()){
+	    		// Ogni record lo strasformo in un elemento della lista di ritorno.
 	    		listGuestbook.add(new RecordQuestbook(rs.getString("entryID"),rs.getString("guestName"),rs.getString("content")));
 	    	}
 	    } 
@@ -49,7 +51,8 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	            }
 	    	}
 	    }
-
+	    
+	    // Ritorno tutti i dati appena letti.
 		return listGuestbook;
 	}
 }
