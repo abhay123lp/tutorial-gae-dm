@@ -11,13 +11,19 @@
     <servlet-class>it.unibo.server.GreetingServiceImpl</servlet-class>
   </servlet>
   
+  <servlet>
+    <servlet-name>sendGuestbook</servlet-name>
+    <servlet-class>it.unibo.server.GuestbookServlet</servlet-class>
+  </servlet> 
+  
   <servlet-mapping>
     <servlet-name>greetServlet</servlet-name>
     <url-pattern>/tutorial_gae_dm/greet</url-pattern>
   </servlet-mapping>
+  GuestbookServlet
       
   <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
+    <servlet-name>sendGuestbook</servlet-name>
     <url-pattern>/sendGuestbook</url-pattern>
   </servlet-mapping>
   

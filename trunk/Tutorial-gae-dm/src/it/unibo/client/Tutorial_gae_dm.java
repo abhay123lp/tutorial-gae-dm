@@ -83,9 +83,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final Grid table = new Grid();
 		final VerticalPanel vFormPanel = new VerticalPanel();
 		final FormPanel formGuest = new FormPanel("sign");
-		formGuest.setEncoding(FormPanel.ENCODING_MULTIPART);
-		formGuest.setMethod(FormPanel.METHOD_GET);
-		formGuest.setAction("/sendGuestbook");
+		formGuest.setEncoding(FormPanel.ENCODING_URLENCODED);
+		formGuest.setMethod(FormPanel.METHOD_POST);
+		formGuest.setAction("/sendGuestbook"); 
 
 		// E' stato premuto il bottone per vedere il tutorial di "Google Cloud SQL"
 		greetingService.dataCloud(new AsyncCallback<Vector<RecordQuestbook>>() {
