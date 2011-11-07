@@ -20,8 +20,9 @@ package it.unibo.shared;
  * JavaScript (such as Widgets) cannot be run on the server.
  * </p>
  */
-public class FieldVerifier {
-
+public class Utility {
+	static boolean START = true;
+	
 	/**
 	 * Verifies that the specified name is valid for our service.
 	 * 
@@ -38,5 +39,9 @@ public class FieldVerifier {
 			return false;
 		}
 		return name.length() > 3;
+	}
+	
+	public static boolean isStartLocal(){
+		return START;
 	}
 }
