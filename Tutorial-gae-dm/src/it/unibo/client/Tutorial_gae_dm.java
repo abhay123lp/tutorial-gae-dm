@@ -9,13 +9,10 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
-import com.google.gwt.event.logical.shared.AttachEvent.Handler;
-import com.google.gwt.safehtml.shared.SafeUri;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -80,6 +77,8 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    				event.cancel();
 	        }
 	    });
+	    // Riseleziono il primo Tab perche' cosi' inizializzo la pagina con il contenuto per il
+	    // tutorial Google Cloud SQL.
 	    widget.selectTab(0);
 	    RootPanel.get("tab").add(widget);
 	}
@@ -90,11 +89,13 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final Grid table = new Grid();
 		final VerticalPanel vFormPanel = new VerticalPanel();
 		final FormPanel formGuest = new FormPanel("");
+		
+		// Setto le proprieta' della form.
 		formGuest.setEncoding(FormPanel.ENCODING_URLENCODED);
 		formGuest.setMethod(FormPanel.METHOD_POST);
 		formGuest.setAction("/sendGuestbook");
 
-		// E' stato premuto il bottone per vedere il tutorial di "Google Cloud SQL"
+		// E' stato premuto il bottone per vedere il tutorial di "Google Cloud SQL".
 		greetingService.dataCloud(new AsyncCallback<Vector<RecordQuestbook>>() {
 			@Override
 			public void onSuccess(Vector<RecordQuestbook> result) {
@@ -108,8 +109,11 @@ public class Tutorial_gae_dm implements EntryPoint {
 					for(int i=0;i<result.size();i++)
 						for(int j=0;j<numFields;j++)
 							table.setWidget(i, j, new Label(result.get(i).getCampo(j)));
+					// Aggiungo nella parte sinistra, la tabella.
+					vSxPanel.add(table);
 				}
-				
+				else
+					vSxPanel.add(new Label("No message!!"));
 				// Costruzione della form per l'invio dei messaggio sul guestbook.
 				vFormPanel.add(new Label("First Name: "));
 				TextBox guestName = new TextBox();
@@ -120,19 +124,17 @@ public class Tutorial_gae_dm implements EntryPoint {
 				content.setName("content");
 				vFormPanel.add(content);
 				Button sendGuest = new Button("Send");
-				// addClickListener è deprecato.
+				// Aggiungo un handler che parte quando viene cliccato il bottone.
+				// Ricordo che addClickListener e' deprecato, quindi non l'ho usato.
 				sendGuest.addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent event) {
 						formGuest.submit();
 					}
 				});
+				// Aggiungo gli elementi.
 				vFormPanel.add(sendGuest);
 				formGuest.add(vFormPanel);
-										
-				// Aggiungo nella parte sinistra, la tabella.
-				vSxPanel.add(table);
-				vSxPanel.add(new Label("No more message!!"));
 				hMainPanel.add(vSxPanel);
 				// Aggiungo nella parte destra una form.
 				hMainPanel.add(formGuest);
