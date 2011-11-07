@@ -21,7 +21,7 @@ package it.unibo.shared;
  * </p>
  */
 public class Utility {
-	static boolean START = true;
+	static boolean START_LOCALE = true;
 	
 	/**
 	 * Verifies that the specified name is valid for our service.
@@ -42,6 +42,6 @@ public class Utility {
 	}
 	
 	public static boolean isStartLocal(){
-		return START;
+		return START_LOCALE;
 	}
 }
