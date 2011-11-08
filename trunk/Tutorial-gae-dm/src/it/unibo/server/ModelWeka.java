@@ -6,10 +6,28 @@ package it.unibo.server;
  * @author Fabio Magnani, Enrico Gramellini
  *
  */
+import it.unibo.shared.DownloadableFile;
+import it.unibo.shared.PMF;
+
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.List;
+
+import javax.jdo.PersistenceManager;
+import javax.jdo.Query;
+
+import org.apache.catalina.session.FileStore;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.trees.J48;
@@ -57,25 +75,31 @@ public class ModelWeka extends RemoteServiceServlet {
 	 * @param dataSet Il dataset a cui verra' aggiunta
 	 * @return L'istanza creata
 	 */
-	private Instance makeInstance(String data, Instances dataSet) {		  
-		Instance instance = new Instance(5);
-		String[] values = data.split(",");
-		Attribute tempo = dataSet.attribute("outlook");
-		Attribute temperatura = dataSet.attribute("temperature");
-		Attribute umidita = dataSet.attribute("humidity");
-		Attribute vento = dataSet.attribute("windy");
-		Attribute gioca = dataSet.attribute("play");
-		instance.setValue(tempo, values[0]);
-		instance.setValue(temperatura, Integer.parseInt(values[1]));
-		instance.setValue(umidita,Integer.parseInt(values[2]));
-		instance.setValue(vento, values[3]);
-		if(values.length > 4){
-			instance.setValue(gioca, values[4]);
-	    }
-		  
-		// Give instance access to attribute information from the dataset.
-		instance.setDataset(dataSet);
-		return instance;
+	private Instance makeInstance(String data, Instances dataSet) {
+		if(dataSet.numInstances()>0)
+		{
+			int numAttributes = dataSet.firstInstance().numAttributes();		
+			String[] values = data.split(",");		
+			if(values.length == numAttributes || values.length == numAttributes-1) {
+				Instance instance = new Instance(numAttributes);
+				for(int i=0;i<values.length;i++) {
+					// Setto i valori dell'istanza in base al suo tipo.
+					if(dataSet.firstInstance().attribute(i).isString())
+						instance.setValue(i, values[i]);
+					else if(dataSet.firstInstance().attribute(i).isNumeric())
+						instance.setValue(i, Integer.parseInt(values[i]));
+				}
+				  
+				// Give instance access to attribute information from the dataset.
+				instance.setDataset(dataSet);
+				return instance;
+			}
+			else
+				// Errore nel passaggio dei parametri.
+				return null;
+		}
+		// Dataset vuoto.
+		return null;
 	}
 	  
 	/**
@@ -89,32 +113,59 @@ public class ModelWeka extends RemoteServiceServlet {
 			throw new Exception("No classifier available.");
 		}
 		  
-		// Make separate little test set so that message
-		// does not get added to string attribute in m_Data.
-		Instances testset = m_Data.stringFreeStructure();
 		// Make message into test instance.
-		Instance instance = makeInstance(message, testset);
-		// Get index of predicted class value.
-		double predicted = m_Classifier.classifyInstance(instance);
-		// Output class value.
-		String msg ="Weather classified as: " + m_Data.classAttribute().value((int) predicted);
-		return msg;
+		Instance instance = makeInstance(message, m_Data);
+		if(instance != null)
+		{
+			// Get index of predicted class value.
+			double predicted = m_Classifier.classifyInstance(instance);
+			// Output class value.
+			String msg = "Instance (" + message + ") classified as: " + m_Data.classAttribute().value((int) predicted);
+			return msg;
+		}
+		else
+			return null;
 	}
 	  
 	public String doJob(String dataFile) {
-		   
+		
+		byte[] buffer;   
 		try{
-			Instances datas = null;
-			datas = new Instances(new BufferedReader(new FileReader(dataFile)));
-			datas.setClassIndex(datas.numAttributes() - 1);
-			m_Classifier.buildClassifier(datas);
-			 
-			m_Data = datas;
-			m_Classifier.buildClassifier(m_Data);
-			System.out.println("Classificazione:" + classifyMessage("overcast,81,75,FALSE"));
-			   
-			return m_Classifier.toString();
-			   		   
+			PersistenceManager pm = PMF.get().getPersistenceManager();
+			// Lettura del file.
+			Query query = pm.newQuery(DownloadableFile.class);
+	        query.setFilter("fileName == argFileName");
+	        query.declareParameters("String argFileName");
+			try {
+				List<DownloadableFile> results = (List<DownloadableFile>) query.execute(dataFile);
+				if (!results.isEmpty()) {
+					if(results.size()==1){
+						// Array di byte che mi rappresentano il file letto.
+						buffer = results.get(0).getFile();
+						OutputStream b = new ByteArrayOutputStream();
+						b.write(buffer);
+						InputStream is = new ByteArrayInputStream(buffer);
+						// Creo i dati attraverso il file.
+						m_Data = new Instances(new BufferedReader(new InputStreamReader(is)));
+						m_Data.setClassIndex(m_Data.numAttributes() - 1);
+						// Costruisco il classificatore.
+						m_Classifier.buildClassifier(m_Data);
+						
+						// Chiudo gli elementi utilizzati.
+						b.close();
+						is.close();
+						 
+						System.out.println(classifyMessage("overcast,81,75,FALSE"));
+						   
+						return m_Classifier.toString();
+					}
+					return "TROVATI TROPPI FILE ARFF";
+				}
+				return "NESSUN FILE ARFF TROVATO";
+			} 
+			finally {
+				query.closeAll();
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}

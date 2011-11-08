@@ -62,14 +62,17 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return listGuestbook;
 	}
 	
-	public String serviceWeka(){
+	public String serviceWeka(String nameFile){
 		ModelWeka model;
 		String result = null;
+		// Creazione del modello.
 		model = new ModelWeka();
-		result = model.doJob("weather.arff");
-		if(result!=null)
+		// Esecuzione della classificazione.
+		result = model.doJob(nameFile);
+		if(result!=null){
 			if(result.equals(""))
 				result = "ERRORE RISULTATO VUOTO";
+		}
 		else
 			result = "ERRORE RISULTATO NULLO";
 		

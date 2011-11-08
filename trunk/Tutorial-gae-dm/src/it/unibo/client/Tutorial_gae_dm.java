@@ -19,8 +19,11 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TabBar;
 import com.google.gwt.user.client.ui.TextArea;
@@ -162,24 +165,24 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final HorizontalPanel hMainPanel = new HorizontalPanel();
 		final VerticalPanel vSxPanel = new VerticalPanel();
 		final VerticalPanel vDxPanel = new VerticalPanel();
-		// Tabella contenente i nomi dei file caricati precedentemente.
-		final Grid tableDataset = new Grid();
 		// Pannello che contiene gli elementi della form.
 		final VerticalPanel vFormPanel = new VerticalPanel();
 		// Form upload file.
 		final FormPanel formUpload = new FormPanel("");
+		// Pannello contenente gli elementi della form di upload dei file.
+		final VerticalPanel vFilePanel = new VerticalPanel();
+		// Serve per poter caricare un file.
 		final FileUpload upload = new FileUpload();
+		// Bottone per usare il dataset.
 		final Button useDataset = new Button("Use Dataset");
 		
-		// Setto le proprieta' della form.
+		// Setto le proprieta' della form upload.
 		formUpload.setEncoding(FormPanel.ENCODING_MULTIPART);
 		formUpload.setMethod(FormPanel.METHOD_POST);
 		formUpload.setAction("/fileUpload");
 		
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
-		
-		upload.setName("fileUpload");
 		
 		Button loadDataset = new Button("Load Dataset");
 		// Aggiungo un handler che parte quando viene cliccato il bottone.
@@ -195,36 +198,27 @@ public class Tutorial_gae_dm implements EntryPoint {
 					Window.alert("File is not correct");
 			}
 		});
+		// Sistemo la parte sinistra del pannello principale.
 		vSxPanel.add(new Label("Load DataSet"));
 		vFormPanel.add(upload);
 		vFormPanel.add(loadDataset);
 		formUpload.add(vFormPanel);
 		vSxPanel.add(formUpload);
 
+		
 		vDxPanel.add(new Label("Use Dataset"));
-		
-		// Aggiungo un handler che parte quando viene cliccato il bottone.
-		// Ricordo che addClickListener e' deprecato, quindi non l'ho usato.
-		loadDataset.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				
-			}
-		});
-		
+		// Richiedo al sever di leggere dal datastore tutti i file gia' caricati.
 		greetingService.datasetWeka(new AsyncCallback<Vector<String>>() {
 			
 			@Override
 			public void onSuccess(Vector<String> result) {
-				if(result.size()>0)
-				{
-					int numRows = result.size();
-					tableDataset.resize(numRows, 1);
+				if(result.size()>0){
 					// Inserisco i dati nella tabella.
-					for(int i=0;i<result.size();i++)
-						tableDataset.setWidget(i, 0, new Label(result.get(i)));
+					for(int i=0;i<result.size();i++) {
+						vFilePanel.add(new RadioButton("group", result.get(i)));
+					}
 					// Aggiungo nella parte destra, la tabella.
-					vDxPanel.add(tableDataset);
+					vDxPanel.add(vFilePanel);
 				}
 				else
 					vDxPanel.add(new Label("No file upload!!"));
@@ -239,7 +233,52 @@ public class Tutorial_gae_dm implements EntryPoint {
 				Window.alert(SERVER_ERROR);
 			}
 		});
+		// Aggiungo un handler che parte quando viene cliccato il bottone.
+		// Ricordo che addClickListener e' deprecato, quindi non l'ho usato.
+		useDataset.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				RadioButton temp = null;
+				boolean select = false;
+				String nameFile = "";
+				// Cerco se c'e' almeno un RadioButton selezionato.
+				for(int i=0;i<vFilePanel.getWidgetCount();i++) {
+					temp = (RadioButton)(vFilePanel.getWidget(i));
+					if(temp.getValue()) {
+						// RadioButton selezionato.
+						nameFile = temp.getText();
+						select=true;
+						break;
+					}
+				}
+				
+				if(!select)
+					// Non c'e' neanche un RadioButton selezionato.
+					Window.alert("Select at least one file!");
+				else
+					// C'e' almeno un RadioButton selezionato.
+					greetingService.serviceWeka(nameFile, new AsyncCallback<String>() {
+						
+						@Override
+						public void onSuccess(String result) {
+							RootPanel.get("content").clear();
+							if (result.contains("\n"))
+								result = result.replaceAll("\n", "<br>");
+							RootPanel.get("content").add(new HTML(result));
+						}
+						
+						@Override
+						public void onFailure(Throwable caught) {
+							// Fallimento.
+							// Pulisco il contenuto della pagina HTML.
+							RootPanel.get("content").clear();
+							Window.alert(SERVER_ERROR);
+						}
+					});
+			}
+		});
 		
+		// Aggiungo il pannello di sinistra e quello di destra a quello principale.
 		hMainPanel.add(vSxPanel);
 		hMainPanel.add(vDxPanel);
 		RootPanel.get("content").add(hMainPanel);
