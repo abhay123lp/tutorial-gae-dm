@@ -13,5 +13,5 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface GreetingServiceAsync {
 	void dataCloud(AsyncCallback<Vector<RecordQuestbook>> callback);
 	void datasetWeka(AsyncCallback<Vector<String>> callback);
-	
+	void serviceWeka(String nameFile,AsyncCallback<String> callback);
 }
