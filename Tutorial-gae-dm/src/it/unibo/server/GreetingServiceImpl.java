@@ -71,10 +71,10 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		result = model.doJob(nameFile);
 		if(result!=null){
 			if(result.equals(""))
-				result = "ERRORE RISULTATO VUOTO";
+				result = "Error in the classifier";
 		}
 		else
-			result = "ERRORE RISULTATO NULLO";
+			result = "Error in the classifier";
 		
 		return result;
 	}
@@ -87,16 +87,13 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		// Lettura
 		Query query = pm.newQuery(DownloadableFile.class);
 
-		try {
-			List<DownloadableFile> results = (List<DownloadableFile>) query.execute();
-			if (!results.isEmpty()) {
-				for (DownloadableFile file : results) {
-					listDataset.add(file.getFilename());
-				}
+		List<DownloadableFile> results = (List<DownloadableFile>) query.execute();
+		if (!results.isEmpty()) {
+			for (DownloadableFile file : results) {
+				listDataset.add(file.getFilename());
 			}
-		} finally {
-			query.closeAll();
-		} 
+		}
+		query.closeAll();
 	    
 	    // Ritorno tutti i dati appena letti.
 		return listDataset;
