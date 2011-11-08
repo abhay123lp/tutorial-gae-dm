@@ -16,6 +16,7 @@ import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -52,7 +53,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 		widget.addTab("Google Cloud SQL");
 	    widget.addTab("Weka");
 	    widget.addTab("Prediction API");
-	    widget.selectTab(0);
+	    widget.selectTab(1);
 	    widget.addSelectionHandler(new SelectionHandler<Integer>() {
 	        public void onSelection(SelectionEvent<Integer> event) {
 	            // Let the user know what they just did.
@@ -79,15 +80,20 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    });
 	    // Riseleziono il primo Tab perche' cosi' inizializzo la pagina con il contenuto per il
 	    // tutorial Google Cloud SQL.
-	    widget.selectTab(0);
+	    widget.selectTab(1);
 	    RootPanel.get("tab").add(widget);
 	}
 	
 	private void Cloud(){
+		// Pannello principale.
 		final HorizontalPanel hMainPanel = new HorizontalPanel();
+		// Parte sinistra del pannello principale.
 		final VerticalPanel vSxPanel = new VerticalPanel();
+		// Tabella contenente i dati della guestbook.
 		final Grid table = new Grid();
+		// Pannello che contiene gli elementi della form.
 		final VerticalPanel vFormPanel = new VerticalPanel();
+		// Form.
 		final FormPanel formGuest = new FormPanel("");
 		
 		// Setto le proprieta' della form.
@@ -152,9 +158,91 @@ public class Tutorial_gae_dm implements EntryPoint {
 	}
 	
 	private void Weka(){
+		// Pannello principale.
+		final HorizontalPanel hMainPanel = new HorizontalPanel();
+		final VerticalPanel vSxPanel = new VerticalPanel();
+		final VerticalPanel vDxPanel = new VerticalPanel();
+		// Tabella contenente i nomi dei file caricati precedentemente.
+		final Grid tableDataset = new Grid();
+		// Pannello che contiene gli elementi della form.
+		final VerticalPanel vFormPanel = new VerticalPanel();
+		// Form upload file.
+		final FormPanel formUpload = new FormPanel("");
+		final FileUpload upload = new FileUpload();
+		final Button useDataset = new Button("Use Dataset");
+		
+		// Setto le proprieta' della form.
+		formUpload.setEncoding(FormPanel.ENCODING_MULTIPART);
+		formUpload.setMethod(FormPanel.METHOD_POST);
+		formUpload.setAction("/fileUpload");
+		
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
-		RootPanel.get("content").add(new Label("Weka"));
+		
+		upload.setName("fileUpload");
+		
+		Button loadDataset = new Button("Load Dataset");
+		// Aggiungo un handler che parte quando viene cliccato il bottone.
+		// Ricordo che addClickListener e' deprecato, quindi non l'ho usato.
+		loadDataset.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				String fileName = null;
+				fileName = upload.getFilename();
+				if(fileName != null && fileName.endsWith(".arff"))
+					formUpload.submit();
+				else
+					Window.alert("File is not correct");
+			}
+		});
+		vSxPanel.add(new Label("Load DataSet"));
+		vFormPanel.add(upload);
+		vFormPanel.add(loadDataset);
+		formUpload.add(vFormPanel);
+		vSxPanel.add(formUpload);
+
+		vDxPanel.add(new Label("Use Dataset"));
+		
+		// Aggiungo un handler che parte quando viene cliccato il bottone.
+		// Ricordo che addClickListener e' deprecato, quindi non l'ho usato.
+		loadDataset.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				
+			}
+		});
+		
+		greetingService.datasetWeka(new AsyncCallback<Vector<String>>() {
+			
+			@Override
+			public void onSuccess(Vector<String> result) {
+				if(result.size()>0)
+				{
+					int numRows = result.size();
+					tableDataset.resize(numRows, 1);
+					// Inserisco i dati nella tabella.
+					for(int i=0;i<result.size();i++)
+						tableDataset.setWidget(i, 0, new Label(result.get(i)));
+					// Aggiungo nella parte destra, la tabella.
+					vDxPanel.add(tableDataset);
+				}
+				else
+					vDxPanel.add(new Label("No file upload!!"));
+				vDxPanel.add(useDataset);
+			}
+			
+			@Override
+			public void onFailure(Throwable caught) {
+				// Fallimento.
+				// Pulisco il contenuto della pagina HTML.
+				RootPanel.get("content").clear();
+				Window.alert(SERVER_ERROR);
+			}
+		});
+		
+		hMainPanel.add(vSxPanel);
+		hMainPanel.add(vDxPanel);
+		RootPanel.get("content").add(hMainPanel);
 	}
 	
 	private void Prediction(){

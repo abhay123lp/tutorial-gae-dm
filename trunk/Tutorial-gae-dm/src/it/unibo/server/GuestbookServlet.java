@@ -17,8 +17,8 @@ import it.unibo.shared.Utility;
 @SuppressWarnings("serial")
 public class GuestbookServlet extends HttpServlet{
 	
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
-		PrintWriter out = resp.getWriter();
+	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException{
+		PrintWriter out = res.getWriter();
 		Connection c = null;
 		try {
 			// Imposto la connessione
@@ -70,8 +70,8 @@ public class GuestbookServlet extends HttpServlet{
 	    }
 	    // Faccio il refresh della pagina.
 	    if(Utility.isStartLocal())
-	    	resp.setHeader("Refresh","3; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
+	    	res.setHeader("Refresh","3; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
 	    else
-	    	resp.setHeader("Refresh","3; url=/Tutorial_gae_dm.html");
+	    	res.setHeader("Refresh","3; url=/Tutorial_gae_dm.html");
 	}
 }
