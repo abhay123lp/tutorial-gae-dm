@@ -1,6 +1,8 @@
 package it.unibo.server;
 
 import it.unibo.client.GreetingService;
+import it.unibo.shared.DownloadableFile;
+import it.unibo.shared.PMF;
 import it.unibo.shared.RecordQuestbook;
 import it.unibo.shared.Utility;
 
@@ -8,7 +10,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Vector;
+
+import javax.jdo.PersistenceManager;
+import javax.jdo.Query;
 
 import com.google.appengine.api.rdbms.AppEngineDriver;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -55,4 +61,42 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	    // Ritorno tutti i dati appena letti.
 		return listGuestbook;
 	}
+	
+	public String serviceWeka(){
+		ModelWeka model;
+		String result = null;
+		model = new ModelWeka();
+		result = model.doJob("weather.arff");
+		if(result!=null)
+			if(result.equals(""))
+				result = "ERRORE RISULTATO VUOTO";
+		else
+			result = "ERRORE RISULTATO NULLO";
+		
+		return result;
+	}
+
+	public Vector<String> datasetWeka() {
+		// Dati della guestbook.
+		Vector<String> listDataset = new Vector<String>();
+		
+		PersistenceManager pm = PMF.get().getPersistenceManager();
+		// Lettura
+		Query query = pm.newQuery(DownloadableFile.class);
+
+		try {
+			List<DownloadableFile> results = (List<DownloadableFile>) query.execute();
+			if (!results.isEmpty()) {
+				for (DownloadableFile file : results) {
+					listDataset.add(file.getFilename());
+				}
+			}
+		} finally {
+			query.closeAll();
+		} 
+	    
+	    // Ritorno tutti i dati appena letti.
+		return listDataset;
+	}
+
 }

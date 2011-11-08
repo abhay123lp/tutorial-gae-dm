@@ -14,4 +14,5 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("greet")
 public interface GreetingService extends RemoteService {
 	Vector<RecordQuestbook> dataCloud();
+	Vector<String> datasetWeka();
 }
