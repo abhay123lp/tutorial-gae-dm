@@ -159,9 +159,9 @@ public class ModelWeka extends RemoteServiceServlet {
 						   
 						return m_Classifier.toString();
 					}
-					return "TROVATI TROPPI FILE ARFF";
+					return "I found more file .arff";
 				}
-				return "NESSUN FILE ARFF TROVATO";
+				return "No files .arff found";
 			} 
 			finally {
 				query.closeAll();
@@ -170,6 +170,6 @@ public class ModelWeka extends RemoteServiceServlet {
 			e.printStackTrace();
 		}
 		   
-		return "ERRORE NELLA CLASSIFICAZIONE";
+		return "Error in the classifier";
 	}
 }
