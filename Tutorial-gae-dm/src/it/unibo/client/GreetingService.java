@@ -16,4 +16,7 @@ public interface GreetingService extends RemoteService {
 	Vector<RecordQuestbook> dataCloud();
 	Vector<String> datasetWeka();
 	String serviceWeka(String nameFile);
+	int authorization();
+	String doPredict(String input);
+	String doTrain();
 }
