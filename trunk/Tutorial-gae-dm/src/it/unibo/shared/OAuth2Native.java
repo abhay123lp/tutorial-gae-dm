@@ -50,28 +50,6 @@ public class OAuth2Native {
 		return CODE;
 	}
 	
-	/**
-	 * Authorizes the installed application to access user's protected data.
-	 *
-	 * @param transport HTTP transport
-	 * @param jsonFactory JSON factory
-	 * @param receiver verification code receiver
-	 * @param credentialStore credential store or {@code null} for none
-   	 * @param browser browser to open in case {@link Desktop#isDesktopSupported()} is {@code false}.
-   	 *        If {@code null} it will simply prompt user to open the URL in their favorite browser.
-  	 * @param clientId OAuth 2.0 client ID
-  	 * @param clientSecret OAuth 2.0 client secret
-  	 * @param scope OAuth 2.0 scope
-  	 */
-	public static void authorize(String browser, String clientId, String scope) throws Exception {
-		String redirectUrl = "";
-		if(Utility.isStartLocal())
-			redirectUrl = "http://127.0.0.1:8888/receiverCode";
-		else
-			redirectUrl = "http://tutorial-gae-dm.appspot.com/receiverCode";
-        launchInBrowser(browser, redirectUrl, clientId, scope);
-	}
-  
 	public static GoogleAccessProtectedResource exchangeCodeForToken(HttpTransport transport,
 	      JsonFactory jsonFactory,
 	      String clientId,
@@ -106,18 +84,6 @@ public class OAuth2Native {
 		    }
 		};
 	}
-
-  	private static void launchInBrowser(String browser, String redirectUrl, String clientId, String scope) throws IOException {
-  		
-  		String authorizationUrl = new GoogleAuthorizationRequestUrl(clientId, redirectUrl, scope).build();
-  		if (browser != null) {
-			Runtime.getRuntime().exec(new String[] {browser, authorizationUrl});
-  		} 
-  		else {
-  			System.out.println("Open the following address in your favorite browser:");
-  			System.out.println("  " + authorizationUrl);
-  		}
-  	}
 
   	private static AccessTokenResponse exchangeCodeForAccessToken(String redirectUrl,
 		HttpTransport transport,

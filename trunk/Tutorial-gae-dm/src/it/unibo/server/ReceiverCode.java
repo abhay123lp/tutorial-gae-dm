@@ -2,6 +2,7 @@ package it.unibo.server;
 
 
 import it.unibo.shared.OAuth2Native;
+import it.unibo.shared.Utility;
 
 import java.io.IOException;
 
@@ -19,10 +20,15 @@ public class ReceiverCode extends RemoteServiceServlet{
       	if (error != null) {
       		System.out.println("Authorization failed. Error=" + error);
       		System.out.println("Quitting.");
-      		System.exit(1);
+    	    if(Utility.isStartLocal())
+    	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
+    	    else
+    	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html");
       	}
-      	code = req.getParameter("code");
-      	OAuth2Native.setCode(code);
-      	res.setHeader("Refresh", "0; url=/tutorial_gae_dm/greet");
+      	else{
+	      	code = req.getParameter("code");
+	      	OAuth2Native.setCode(code);
+	      	res.setHeader("Refresh", "0; url=/tutorial_gae_dm/greet");
+      	}
 	}
 }

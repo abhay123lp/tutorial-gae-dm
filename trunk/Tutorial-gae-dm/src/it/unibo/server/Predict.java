@@ -14,7 +14,12 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @SuppressWarnings("serial")
 public class Predict extends RemoteServiceServlet{
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
-		String authorizationUrl = new GoogleAuthorizationRequestUrl(OAuth2ClientCredentials.CLIENT_ID, "http://127.0.0.1:8888/receiverCode", Utility.SCOPE).build();
+		String redirectUrl = "";
+		if(Utility.isStartLocal())
+			redirectUrl = "http://127.0.0.1:8888/receiverCode";
+		else
+			redirectUrl = "http://tutorial-gae-dm.appspot.com/receiverCode";
+		String authorizationUrl = new GoogleAuthorizationRequestUrl(OAuth2ClientCredentials.CLIENT_ID, redirectUrl, Utility.SCOPE).build();
 		res.setHeader("Refresh", "0; url="+authorizationUrl);
 	}
 }
