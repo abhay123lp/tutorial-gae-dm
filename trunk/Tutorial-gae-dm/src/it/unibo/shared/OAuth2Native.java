@@ -14,22 +14,16 @@
 
 package it.unibo.shared;
 
-import java.awt.Desktop;
 import java.io.IOException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.google.api.client.auth.oauth2.draft10.AccessTokenErrorResponse;
 import com.google.api.client.auth.oauth2.draft10.AccessTokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessProtectedResource;
-import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAuthorizationRequestUrl;
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessTokenRequest.GoogleAuthorizationCodeGrant;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
  * Implements OAuth authentication "native" flow recommended for installed clients in which the end
@@ -37,7 +31,6 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
  *
  * @author Yaniv Inbar
  */
-@SuppressWarnings("serial")
 public class OAuth2Native {
 
 	private static String CODE = "";

@@ -12,26 +12,18 @@ import it.unibo.shared.PMF;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.List;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
-import org.apache.catalina.session.FileStore;
-
 import weka.classifiers.Classifier;
 import weka.classifiers.trees.J48;
-import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
