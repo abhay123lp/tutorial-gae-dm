@@ -21,6 +21,21 @@
     <servlet-class>it.unibo.server.FileUpload</servlet-class>
   </servlet> 
       
+  <servlet>
+    <servlet-name>predict</servlet-name>
+    <servlet-class>it.unibo.server.Predict</servlet-class>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>receiverCode</servlet-name>
+    <servlet-class>it.unibo.server.ReceiverCode</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>receiverCode</servlet-name>
+    <url-pattern>/receiverCode</url-pattern>
+  </servlet-mapping>
+          
   <servlet-mapping>
     <servlet-name>greetServlet</servlet-name>
     <url-pattern>/tutorial_gae_dm/greet</url-pattern>
@@ -35,6 +50,11 @@
     <servlet-name>sendGuestbook</servlet-name>
     <url-pattern>/sendGuestbook</url-pattern>
   </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>predict</servlet-name>
+    <url-pattern>/predict</url-pattern>
+  </servlet-mapping>  
     
   <!-- Default page to serve -->
   <welcome-file-list>

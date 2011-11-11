@@ -1,5 +1,10 @@
 package it.unibo.shared;
 
+import com.google.api.client.extensions.appengine.http.urlfetch.UrlFetchTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson.JacksonFactory;
+
 /**
  * <p>
  * FieldVerifier validates that the name the user enters is valid.
@@ -23,6 +28,16 @@ package it.unibo.shared;
 public class Utility {
 	static boolean START_LOCALE = true;
 	
+	private static final HttpTransport TRANSPORT = new UrlFetchTransport();
+	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+  
+	/** OAuth 2 scope. */
+	public static final String SCOPE = "https://www.googleapis.com/auth/prediction";
+	
+	public static final String STORAGE_DATA_LOCATION = "fabiohelloprediction/language_id.txt";
+	
+	public static final String MODEL_ID = "language_prediction_model";
+	
 	/**
 	 * Verifies that the specified name is valid for our service.
 	 * 
@@ -43,5 +58,13 @@ public class Utility {
 	
 	public static boolean isStartLocal(){
 		return START_LOCALE;
+	}
+	
+	public static HttpTransport getTransport() {
+		return TRANSPORT;
+	}
+
+	public static JsonFactory getJsonFactory() {
+		return JSON_FACTORY;
 	}
 }
