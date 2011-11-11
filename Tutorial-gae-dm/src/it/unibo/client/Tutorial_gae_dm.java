@@ -24,7 +24,6 @@ import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -299,22 +298,20 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 			@Override
 			public void onFailure(Throwable caught) {
-				RootPanel.get("content").clear();
-				Window.alert(SERVER_ERROR);
 			}
 		});
 		
 	}
+	
 	private void authorization(){
 		final Button sendAuthorization = new Button("Authorization");
-		// Form per le autorizzazioni per usare la api.
+		// Form per le autorizzazioni per usare la api.		
 		final FormPanel formPredict = new FormPanel("");
 		// Setto le proprieta' della form.
 		formPredict.setEncoding(FormPanel.ENCODING_URLENCODED);
 		formPredict.setMethod(FormPanel.METHOD_GET);
 		formPredict.setAction("/predict");
-		
-		// Add a handler to close the DialogBox
+		// Quando viene premuto il buttone faccio il submit della form.
 		sendAuthorization.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -325,49 +322,44 @@ public class Tutorial_gae_dm implements EntryPoint {
 		RootPanel.get("content").add(formPredict);
 	}
 	
-	private void prediction(){
+	private void prediction() {
+		// Pannello principale.
 		final HorizontalPanel hMainPanel = new HorizontalPanel();
+		// Bottone per l'invio delle query.
 		final Button sendQueryButton = new Button("Send");
 		sendQueryButton.setTitle("Send");
+		// Bottone per impostare il train.
 		final Button sendTrainButton = new Button("Train");
 		sendTrainButton.setTitle("Train");
+		// TextBox dove e' possibile inserire la query da inviare al server.
 		final TextBox queryField = new TextBox();
 		queryField.setText("query");
-		// We can add style names to widgets
+		// Imposto gli stili.
 		sendQueryButton.addStyleName("sendButton");
 		sendTrainButton.addStyleName("sendButton");
-
-		// Add the nameField and sendButton to the RootPanel
-		// Use RootPanel.get() to get the entire body element
+		// Inserisco nel pannello principale i vari elementi.
 		hMainPanel.add(queryField);
 		hMainPanel.add(sendQueryButton);
 		hMainPanel.add(sendTrainButton);
+		// Inserisco nella RootPanel il panello principale. 
 		RootPanel.get("content").add(hMainPanel);
-
-		// Focus the cursor on the name field when the app loads
+		// Faccio il focus
 		queryField.setFocus(true);
 		queryField.selectAll();
-
-		// Create the popup dialog box
+		// Creazione del popup per le risposte del server.
 		final DialogBox dialogBox = new DialogBox();
 		dialogBox.setText("Remote Procedure Call");
 		dialogBox.setAnimationEnabled(true);
 		final Button closeButton = new Button("Close");
-		// We can set the id of a widget by accessing its Element
-		closeButton.getElement().setId("closeButton");
 		final Label textToServerLabel = new Label();
 		final HTML serverResponseLabel = new HTML();
-		VerticalPanel dialogVPanel = new VerticalPanel();
+		final VerticalPanel dialogVPanel = new VerticalPanel();
 		dialogVPanel.addStyleName("dialogVPanel");
-		dialogVPanel.add(new HTML("<b>Sending query to the server:</b>"));
-		dialogVPanel.add(textToServerLabel);
-		dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-		dialogVPanel.add(serverResponseLabel);
 		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
 		dialogVPanel.add(closeButton);
 		dialogBox.setWidget(dialogVPanel);
-
-		// Add a handler to close the DialogBox
+		
+		// Quando viene cliccato il bottone di chiusura del popup, riabilito gli altri bottoni.
 		closeButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dialogBox.hide();
@@ -377,7 +369,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 		});
 
-		// Create a handler for the sendButton and nameField
+		// Handler che gestisce i bottoni di invio della query e del train.
 		class MyHandler implements ClickHandler, KeyUpHandler {
 			/**
 			 * Fired when the user clicks on the sendButton.
@@ -395,6 +387,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 			 */
 			public void onKeyUp(KeyUpEvent event) {
 				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+					// Quando premo invio nella casella di testo riservata alla query, la invio al server.
 					sendQueryToServer();
 				}
 			}
@@ -415,19 +408,24 @@ public class Tutorial_gae_dm implements EntryPoint {
 						new AsyncCallback<String>() {
 							public void onFailure(Throwable caught) {
 								// Show the RPC error message to the user
-								dialogBox
-										.setText("Remote Procedure Call - Failure");
-								serverResponseLabel
-										.addStyleName("serverResponseLabelError");
+								dialogVPanel.clear();
+								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+								dialogVPanel.add(serverResponseLabel);
+								dialogBox.setText("Remote Procedure Call - Failure");
+								serverResponseLabel.addStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(SERVER_ERROR);
 								dialogBox.center();
 								closeButton.setFocus(true);
 							}
 
 							public void onSuccess(String result) {
+								dialogVPanel.clear();
+								dialogVPanel.add(new HTML("<b>Sending query to the server:</b>"));
+								dialogVPanel.add(textToServerLabel);
+								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+								dialogVPanel.add(serverResponseLabel);
 								dialogBox.setText("Remote Procedure Call");
-								serverResponseLabel
-										.removeStyleName("serverResponseLabelError");
+								serverResponseLabel.removeStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(result);
 								dialogBox.center();
 								closeButton.setFocus(true);
@@ -451,10 +449,11 @@ public class Tutorial_gae_dm implements EntryPoint {
 						new AsyncCallback<String>() {
 							public void onFailure(Throwable caught) {
 								// Show the RPC error message to the user
-								dialogBox
-										.setText("Remote Procedure Call - Failure");
-								serverResponseLabel
-										.addStyleName("serverResponseLabelError");
+								dialogVPanel.clear();
+								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+								dialogVPanel.add(serverResponseLabel);
+								dialogBox.setText("Remote Procedure Call - Failure");
+								serverResponseLabel.addStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(SERVER_ERROR);
 								dialogBox.center();
 								closeButton.setFocus(true);
@@ -462,8 +461,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 
 							public void onSuccess(String result) {
 								dialogBox.setText("Remote Procedure Call");
-								serverResponseLabel
-										.removeStyleName("serverResponseLabelError");
+								dialogVPanel.clear();
+								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+								dialogVPanel.add(serverResponseLabel);
+								serverResponseLabel.removeStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(result);
 								dialogBox.center();
 								closeButton.setFocus(true);
@@ -478,4 +479,5 @@ public class Tutorial_gae_dm implements EntryPoint {
 		sendTrainButton.addClickHandler(handler);
 		queryField.addKeyUpHandler(handler);
 	}
+	
 }

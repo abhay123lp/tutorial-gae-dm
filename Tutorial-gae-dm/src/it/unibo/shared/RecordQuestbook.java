@@ -3,46 +3,95 @@ package it.unibo.shared;
 import java.io.Serializable;
 
 
+/**
+ * @author Fabio Magnani, Enrico Gramellini.
+ * Classe per l'uso dei record della tabella per la lettura dei dati della guestbook.
+ *
+ */
+@SuppressWarnings("serial")
 public class RecordQuestbook implements Serializable {
-	private String campo1;
-	private String campo2;
-	private String campo3;
-	// Numero dei campi
+	// Identificativo del record.
+	private String entryID;
+	// Nome dell'utente.
+	private String guestName;
+	// Messaggio dell'utente.
+	private String content;
+	
+	// Numero dei campi.
 	private static int NUM_FIELDS=3;
 	
 	public RecordQuestbook() {}
 	
-	public RecordQuestbook(String campo1, String campo2, String campo3) {
-		this.campo1 = campo1;
-		this.campo2 = campo2;
-		this.campo3 = campo3;
+	/**
+	 * @param entryID Identificativo del record. 
+	 * @param guestName Nome dell'utente.
+	 * @param content Messaggio dell'utente.
+	 */ 
+	public RecordQuestbook(String entryID, String guestName, String content) {
+		super();
+		this.entryID = entryID;
+		this.guestName = guestName;
+		this.content = content;
 	}
-	public String getCampo1() {
-		return campo1;
+
+	/**
+	 * @return Identificativo del record.
+	 */
+	public String getEntryID() {
+		return entryID;
 	}
-	public void setCampo1(String campo1) {
-		this.campo1 = campo1;
+
+	/**
+	 * @param entryID Identificativo del record.
+	 */
+	public void setEntryID(String entryID) {
+		this.entryID = entryID;
 	}
-	public String getCampo2() {
-		return campo2;
+
+	/**
+	 * @return Nome dell'utente.
+	 */
+	public String getGuestName() {
+		return guestName;
 	}
-	public void setCampo2(String campo2) {
-		this.campo2 = campo2;
+
+	/**
+	 * @param guestName Nome dell'utente.
+	 */
+	public void setGuestName(String guestName) {
+		this.guestName = guestName;
 	}
-	public String getCampo3() {
-		return campo3;
+
+	/**
+	 * @return Messaggio dell'utente.
+	 */
+	public String getContent() {
+		return content;
 	}
-	public void setCampo3(String campo3) {
-		this.campo3 = campo3;
+
+	/**
+	 * @param content Messaggio dell'utente.
+	 */
+	public void setContent(String content) {
+		this.content = content;
 	}
+	
+	/**
+	 * @param i Indice del campo che si vuole ottenere.
+	 * @return Valore del campo richiesto.
+	 */
 	public String getCampo(int i){
 		if(i==0)
-			return campo1;
+			return entryID;
 		else if(i==1)
-			return campo2;
+			return guestName;
 		else
-			return campo3;
+			return content;
 	}
+	
+	/**
+	 * @return Numero dei campi del record.
+	 */
 	public int getNumFields(){
 		return NUM_FIELDS;
 	}

@@ -8,9 +8,7 @@ import it.unibo.shared.PMF;
 import it.unibo.shared.RecordQuestbook;
 import it.unibo.shared.Utility;
 
-import java.awt.Desktop;
 import java.io.IOException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -23,8 +21,6 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import sun.awt.DesktopBrowse;
 
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessProtectedResource;
 import com.google.api.client.googleapis.json.GoogleJsonError;

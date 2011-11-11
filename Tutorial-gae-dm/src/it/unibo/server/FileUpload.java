@@ -17,26 +17,33 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
+/**
+ * @author Fabio Magnani, Enrico Gramellini.
+ * Servlet per l'inserimento di un file su datastore.
+ */
 @SuppressWarnings("serial")
 public class FileUpload extends HttpServlet {
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		try {
-			
+			// Servlet per l'upload.
 			ServletFileUpload upload = new ServletFileUpload();
 			res.setContentType("text/plain");
-
+			
+			// Prendo i file selezionati dall'utente.
 			FileItemIterator iterator = upload.getItemIterator(req);
 			while (iterator.hasNext()) {
 				FileItemStream item = iterator.next();
 				InputStream stream = item.openStream();
 				if (!item.isFormField()) {
 					
+					// I file vengono caricati come array di byte.
 					byte[] buffer = new byte[stream.available()];
 					while (stream.read(buffer, 0, buffer.length) != -1) {
-						// Serve per vedere se lo ha caricato bn. Quindi lo stampo nella risposta.
+						// Serve per vedere se lo ha caricato bene. Quindi lo stampo nella risposta.
 						res.getOutputStream().write(buffer);
 					}
+					// Preparo la classe che sara' inserita nel datastore.
 					DownloadableFile file = new DownloadableFile(item.getName(), buffer);
 					PersistenceManager pm = PMF.get().getPersistenceManager();
 				    // Scrittura su datastore tramite le JDO.

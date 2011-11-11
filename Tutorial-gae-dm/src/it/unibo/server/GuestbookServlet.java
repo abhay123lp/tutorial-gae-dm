@@ -14,6 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.appengine.api.rdbms.AppEngineDriver;
 import it.unibo.shared.Utility;
 
+/**
+ * @author Fabio Magnani, Enrico Gramellini.
+ * Servlet per inserire nell'istanza Google Cloud SQL nuovi record. 
+ */
 @SuppressWarnings("serial")
 public class GuestbookServlet extends HttpServlet{
 	
@@ -21,15 +25,15 @@ public class GuestbookServlet extends HttpServlet{
 		PrintWriter out = res.getWriter();
 		Connection c = null;
 		try {
-			// Imposto la connessione
+			// Imposto la connessione.
 	    	DriverManager.registerDriver(new AppEngineDriver());
 	    	if(Utility.isStartLocal())
-		    	// Connessione locale
+		    	// Connessione locale.
 		    	c = DriverManager.getConnection("jdbc:google:rdbms://localhost:3306/guestbook","root","fabio.magnani3");
 	    	else
-	    		// Connessione remoto
+	    		// Connessione remoto.
 	    		c = DriverManager.getConnection("jdbc:google:rdbms://tutorial-id:firstinstance/guestbook");
-	    	// Recupero i parametri della form
+	    	// Recupero i parametri della form.
 	    	req.getParameterNames();
 	    	String guestName = req.getParameter("guestName");
 	    	String content = req.getParameter("content");

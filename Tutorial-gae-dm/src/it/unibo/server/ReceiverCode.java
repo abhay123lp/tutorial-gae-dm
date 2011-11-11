@@ -11,13 +11,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
+/**
+ * @author Fabio Magnani, Enrico Gramellini.
+ * Servlet richiamata al momento del consenso delle autorizzazioni per usare le Prediction API.
+ */
 @SuppressWarnings("serial")
 public class ReceiverCode extends RemoteServiceServlet{
 	
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
-	    String code;  
+	    String code; 
       	String error = req.getParameter("error");
       	if (error != null) {
+      		// L'utente non ha cosentito.
       		System.out.println("Authorization failed. Error=" + error);
       		System.out.println("Quitting.");
     	    if(Utility.isStartLocal())
@@ -26,8 +31,10 @@ public class ReceiverCode extends RemoteServiceServlet{
     	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html");
       	}
       	else{
+      		// L'utente ha accettato, quindi prelevo il "code" rilasciato da google.
 	      	code = req.getParameter("code");
 	      	OAuth2Native.setCode(code);
+	      	// Refresh della pagina.
 	      	res.setHeader("Refresh", "0; url=/tutorial_gae_dm/greet");
       	}
 	}

@@ -15,34 +15,16 @@
 package it.unibo.shared;
 
 /**
- * OAuth 2 credentials found in the <a href="https://code.google.com/apis/console">Google apis
- * console</a>.
- *
- * <p>
- * Once at the Google APIs console, click on "Add project...". If you've already set up a project,
- * you may use that one instead, or create a new one by clicking on the arrow next to the project
- * name and click on "Create..." under "Other projects". For each API you want to use, click on the
- * status switch to flip it to "ON", and agree to the terms of service.
- * </p>
- * <p>
- * Next, click on "API Access", and then on "Create an OAuth 2.0 Client ID...". Enter your product
- * name and click "Next". Select "Installed application" and click "Create client ID".
- * </p>
- *
- * @author Yaniv Inbar
+ * @author Fabio Magnani, Enrico Gramellini.
+ * Credenziali per le autorizzazioni OAuth. Settate nelle Google APIs Console sotto
+ * il menu' API Access.
  */
 public class OAuth2ClientCredentials {
 
-	/** Value of the "Client ID" shown under "Client ID for installed applications". */
-	public static final String CLIENT_ID = "638477266427.apps.googleusercontent.com";
+	// Valore del "Cliente_ID".
+	public static final String CLIENT_ID = "638477266427-dgje3eqrl6pi4tu5gl7arvat0vul5gva.apps.googleusercontent.com";
 
-	/** Value of the "Client secret" shown under "Client ID for installed applications". */
-	public static final String CLIENT_SECRET = "iHLuUcnKa9_mFI7H2d4xyOWn";
+	// Valore del "Client secret".
+	public static final String CLIENT_SECRET = "PhIv9ARsr4WO74v4PhzNV0-p";
 
-	public static void errorIfNotSpecified() {
-		if (CLIENT_ID == null || CLIENT_SECRET == null) {
-			System.err.println("Please enter your client ID and secret in " + OAuth2ClientCredentials.class);
-			System.exit(1);
-		}
-	}
 }
