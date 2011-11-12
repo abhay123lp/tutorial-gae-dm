@@ -1,11 +1,6 @@
 package it.unibo.server;
 
-/**
- * Programma per classificare un dataset.
- *
- * @author Fabio Magnani, Enrico Gramellini
- *
- */
+
 import it.unibo.shared.DownloadableFile;
 import it.unibo.shared.PMF;
 
@@ -24,11 +19,18 @@ import javax.jdo.Query;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.trees.J48;
+import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
+/**
+ * Programma per classificare un dataset.
+ *
+ * @author Fabio Magnani, Enrico Gramellini
+ *
+ */
 @SuppressWarnings("serial")
 public class ModelWeka extends RemoteServiceServlet {	
 	
@@ -43,16 +45,16 @@ public class ModelWeka extends RemoteServiceServlet {
 	/**
 	 * Metodo che configura il classificatore a partire dal nome del file che lo contiene
 	 *
-	 * @param modelName Nome del file che contiene il modello
+	 * @param modelName Nome del file che contiene il modello.
 	 */
 	public void setClassifier(String modelName){
 		try {
 			Classifier model;
-			//Load the model
+			// Carico il modello
 			ObjectInputStream modelInObjectFile = new ObjectInputStream(new FileInputStream(modelName));
 			model = (Classifier) modelInObjectFile.readObject();
 			modelInObjectFile.close();
-   
+			// Setto il modello.
 			this.m_Classifier = model;
 			System.out.println("Model "+modelName+" lodaded.");
 		} catch (Exception e) {
@@ -63,9 +65,9 @@ public class ModelWeka extends RemoteServiceServlet {
 	/**
 	 * Metodo che converte una stringa in una istanza (record)
 	 *
-	 * @param data La stringa nel formato Tempo,Temperatura,Umidita',Vento, [Gioca]
-	 * @param dataSet Il dataset a cui verra' aggiunta
-	 * @return L'istanza creata
+	 * @param data La stringa deve avere il formato dell'istanza. Tutti i campi tranne quello da predire
+	 * @param dataSet Il dataset a cui verra' aggiunta.
+	 * @return L'istanza creata.
 	 */
 	private Instance makeInstance(String data, Instances dataSet) {
 		if(dataSet.numInstances()>0)
@@ -76,13 +78,14 @@ public class ModelWeka extends RemoteServiceServlet {
 				Instance instance = new Instance(numAttributes);
 				for(int i=0;i<values.length;i++) {
 					// Setto i valori dell'istanza in base al suo tipo.
-					if(dataSet.firstInstance().attribute(i).isString())
-						instance.setValue(i, values[i]);
-					else if(dataSet.firstInstance().attribute(i).isNumeric())
-						instance.setValue(i, Integer.parseInt(values[i]));
+					Attribute attribute = dataSet.attribute(dataSet.firstInstance().attribute(i).name());
+					if(dataSet.firstInstance().attribute(i).isNumeric())
+						instance.setValue(attribute, Integer.parseInt(values[i]));
+					else
+						instance.setValue(attribute, values[i]);
 				}
 				  
-				// Give instance access to attribute information from the dataset.
+				// Do l'accesso all'istanza che e' da attribuire alle informazioni del dataset.
 				instance.setDataset(dataSet);
 				return instance;
 			}
@@ -95,9 +98,9 @@ public class ModelWeka extends RemoteServiceServlet {
 	}
 	  
 	/**
-	 * Classifica un messaggio passato in ingresso
+	 * Classifica un messaggio passato in ingresso.
 	 *
-	 * @return Una rappresentazione testuale della classe del messaggio
+	 * @return Una rappresentazione testuale della classe del messaggio.
 	 */
 	public String classifyMessage(String message) throws Exception {
 		// Check whether classifier has been built.
@@ -105,21 +108,26 @@ public class ModelWeka extends RemoteServiceServlet {
 			throw new Exception("No classifier available.");
 		}
 		  
-		// Make message into test instance.
+		// Creazione del messaggio.
 		Instance instance = makeInstance(message, m_Data);
 		if(instance != null)
 		{
-			// Get index of predicted class value.
+			// Prendo l'indice del valore previsto della classe.
 			double predicted = m_Classifier.classifyInstance(instance);
-			// Output class value.
+			// Output.
 			String msg = "Instance (" + message + ") classified as: " + m_Data.classAttribute().value((int) predicted);
 			return msg;
 		}
 		else
-			return null;
+			throw new Exception("Error creating instance");
 	}
 	  
-	public String doJob(String dataFile) {
+	/**
+	 * Generazione del classificatore.
+	 * @param dataFile Nome del file contenente il dataset da usare.
+	 * @return Albero del classificatore generato.
+	 */
+	public String makeClassifier(String dataFile) {
 		
 		byte[] buffer;   
 		try{
@@ -146,9 +154,8 @@ public class ModelWeka extends RemoteServiceServlet {
 						// Chiudo gli elementi utilizzati.
 						b.close();
 						is.close();
-						 
-						System.out.println(classifyMessage("overcast,81,75,FALSE"));
-						   
+						
+						// Ritorno l'albero generato dal classificatore.
 						return m_Classifier.toString();
 					}
 					return "I found more file .arff";
@@ -161,7 +168,7 @@ public class ModelWeka extends RemoteServiceServlet {
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		   
 		return "Error in the classifier";
 	}
+	
 }
