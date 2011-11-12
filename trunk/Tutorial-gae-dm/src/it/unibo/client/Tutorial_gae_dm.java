@@ -37,32 +37,30 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class Tutorial_gae_dm implements EntryPoint {
-	/**
-	 * The message displayed to the user when the server cannot be reached or
-	 * returns an error.
-	 */
+	// Messaggio di errore visualizzato quando il server non e' raggiungibile.
 	private static final String SERVER_ERROR = "An error occurred while "
 			+ "attempting to contact the server. Please check your network "
 			+ "connection and try again.";
-	/**
-	 * Create a remote service proxy to talk to the server-side Greeting service.
-	 */
+
+	// Creazione di un remote service proxy per chiamare il server.
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 
-	/**
-	 * This is the entry point method.
-	 */
+	// Per i messaggio di errore o per quelli ricevuti dal server faccio vedere la DialogBox.
+	private final DialogBox dialogBox = new DialogBox();
+	
+	// Metodo dell'entry point.
 	public void onModuleLoad() {
+		// Menu' tab per selezionare il tutorial desiderato.
 		final TabBar widget = new TabBar();
 		
 		widget.addTab("Google Cloud SQL");
 	    widget.addTab("Weka");
 	    widget.addTab("Prediction API");
-	    widget.selectTab(2);
+	    widget.selectTab(0);
 	    widget.addSelectionHandler(new SelectionHandler<Integer>() {
 	        public void onSelection(SelectionEvent<Integer> event) {
-	            // Let the user know what they just did.
+	            // A seconda di cosa e' stato selezionato, visualizzo il tutorial.
 	        	if(event.getSelectedItem().intValue() == 0)
 	        		Cloud();
 	        	else if(event.getSelectedItem().intValue() == 1)
@@ -75,6 +73,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    widget.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
 	    	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
 	    		if(event.getItem().intValue() != widget.getSelectedTab())
+	    			// Se il tab selezionato e' diverso da quello corrente, chiedo conferma dell'operazione.
 	    			if(!Window.confirm("You really want to leave '"
 	    			    + widget.getTabHTML(widget.getSelectedTab())
 	    			    + "' and go to '"
@@ -86,7 +85,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    });
 	    // Riseleziono il primo Tab perche' cosi' inizializzo la pagina con il contenuto per il
 	    // tutorial Google Cloud SQL.
-	    widget.selectTab(2);
+	    widget.selectTab(0);
 	    RootPanel.get("tab").add(widget);
 	}
 	
@@ -99,7 +98,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final Grid table = new Grid();
 		// Pannello che contiene gli elementi della form.
 		final VerticalPanel vFormPanel = new VerticalPanel();
-		// Form.
+		// Form per la guestbook.
 		final FormPanel formGuest = new FormPanel("");
 		
 		// Setto le proprieta' della form.
@@ -128,11 +127,11 @@ public class Tutorial_gae_dm implements EntryPoint {
 					vSxPanel.add(new Label("No message!!"));
 				// Costruzione della form per l'invio dei messaggio sul guestbook.
 				vFormPanel.add(new Label("First Name: "));
-				TextBox guestName = new TextBox();
+				final TextBox guestName = new TextBox();
 				guestName.setName("guestName");
 				vFormPanel.add(guestName);
 				vFormPanel.add(new Label("Message: "));
-				TextArea content = new TextArea();
+				final TextArea content = new TextArea();
 				content.setName("content");
 				vFormPanel.add(content);
 				Button sendGuest = new Button("Send");
@@ -141,7 +140,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 				sendGuest.addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent event) {
-						formGuest.submit();
+						if(content.getText().equals("") || guestName.getText().equals(""))
+							Window.alert("Insert the fields.");
+						else
+							formGuest.submit();
 					}
 				});
 				// Aggiungo gli elementi.
@@ -156,9 +158,12 @@ public class Tutorial_gae_dm implements EntryPoint {
 			@Override
 			public void onFailure(Throwable caught) {
 				// Fallimento.
-				// Pulisco il contenuto della pagina HTML.
-				RootPanel.get("content").clear();
-				Window.alert(SERVER_ERROR);
+				VerticalPanel dialogVPanel = new VerticalPanel();
+				HTML serverResponseLabel = new HTML();
+				serverResponseLabel.addStyleName("serverResponseLabelError");
+				serverResponseLabel.setHTML(SERVER_ERROR);
+				dialogVPanel.add(serverResponseLabel);
+				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
 			}
 		});		
 	}
@@ -166,8 +171,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 	private void Weka(){
 		// Pannello principale.
 		final HorizontalPanel hMainPanel = new HorizontalPanel();
-		final VerticalPanel vSxPanel = new VerticalPanel();
-		final VerticalPanel vDxPanel = new VerticalPanel();
+		final VerticalPanel vFirstPanel = new VerticalPanel();
+		final VerticalPanel vSecondPanel = new VerticalPanel();
+		final HorizontalPanel vThirdPanel = new HorizontalPanel();
 		// Pannello che contiene gli elementi della form.
 		final VerticalPanel vFormPanel = new VerticalPanel();
 		// Form upload file.
@@ -178,6 +184,11 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final FileUpload upload = new FileUpload();
 		// Bottone per usare il dataset.
 		final Button useDataset = new Button("Use Dataset");
+		// TextBox dove e' possibile inserire l'istanza da classificare.
+		final TextBox instanceField = new TextBox();
+		instanceField.setText("instance");
+		// Bottone per classificare una istanza.
+		final Button predictInstance = new Button("Classify");		
 		
 		// Setto le proprieta' della form upload.
 		formUpload.setEncoding(FormPanel.ENCODING_MULTIPART);
@@ -186,6 +197,27 @@ public class Tutorial_gae_dm implements EntryPoint {
 		
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
+		
+		// Setto nel terzo pannello gli elementi per predire un'istanza.
+		vThirdPanel.add(instanceField);
+		vThirdPanel.add(predictInstance);
+		
+		predictInstance.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				String instance = instanceField.getText();
+				greetingService.classifyMessage(instance, new AsyncCallback<String>() {
+					@Override
+					public void onSuccess(String result) {
+						Window.alert(result);
+					}
+					@Override
+					public void onFailure(Throwable caught) {
+						Window.alert(caught.getMessage());
+					}
+				});
+			}
+		});
 		
 		Button loadDataset = new Button("Load Dataset");
 		// Aggiungo un handler che parte quando viene cliccato il bottone.
@@ -201,15 +233,15 @@ public class Tutorial_gae_dm implements EntryPoint {
 					Window.alert("File is not correct");
 			}
 		});
-		// Sistemo la parte sinistra del pannello principale.
-		vSxPanel.add(new Label("Load DataSet"));
+		// Sistemo la prima parte del pannello principale.
+		vFirstPanel.add(new Label("Load DataSet"));
 		vFormPanel.add(upload);
 		vFormPanel.add(loadDataset);
 		formUpload.add(vFormPanel);
-		vSxPanel.add(formUpload);
+		vFirstPanel.add(formUpload);
 
 		
-		vDxPanel.add(new Label("Use Dataset"));
+		vSecondPanel.add(new Label("Use Dataset"));
 		// Richiedo al sever di leggere dal datastore tutti i file gia' caricati.
 		greetingService.datasetWeka(new AsyncCallback<Vector<String>>() {
 			
@@ -220,12 +252,12 @@ public class Tutorial_gae_dm implements EntryPoint {
 					for(int i=0;i<result.size();i++) {
 						vFilePanel.add(new RadioButton("group", result.get(i)));
 					}
-					// Aggiungo nella parte destra, la tabella.
-					vDxPanel.add(vFilePanel);
+					// Aggiungo nel secondo panello, la tabella.
+					vSecondPanel.add(vFilePanel);
 				}
 				else
-					vDxPanel.add(new Label("No file upload!!"));
-				vDxPanel.add(useDataset);
+					vSecondPanel.add(new Label("No file upload!!"));
+				vSecondPanel.add(useDataset);
 			}
 			
 			@Override
@@ -263,10 +295,11 @@ public class Tutorial_gae_dm implements EntryPoint {
 					greetingService.serviceWeka(nameFile, new AsyncCallback<String>() {
 						@Override
 						public void onSuccess(String result) {
-							RootPanel.get("content").clear();
 							if (result.contains("\n"))
 								result = result.replaceAll("\n", "<br>");
-							RootPanel.get("content").add(new HTML(result));
+							Window.alert(result);
+//							RootPanel.get("content").clear();
+//							RootPanel.get("content").add(new HTML(result));
 						}
 						@Override
 						public void onFailure(Throwable caught) {
@@ -279,9 +312,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 		});
 		
-		// Aggiungo il pannello di sinistra e quello di destra a quello principale.
-		hMainPanel.add(vSxPanel);
-		hMainPanel.add(vDxPanel);
+		// Aggiungo la varie parti al pannello principale.
+		hMainPanel.add(vFirstPanel);
+		hMainPanel.add(vSecondPanel);
+		hMainPanel.add(vThirdPanel);
 		RootPanel.get("content").add(hMainPanel);
 	}
 	
@@ -347,17 +381,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 		queryField.setFocus(true);
 		queryField.selectAll();
 		// Creazione del popup per le risposte del server.
-		final DialogBox dialogBox = new DialogBox();
-		dialogBox.setText("Remote Procedure Call");
-		dialogBox.setAnimationEnabled(true);
 		final Button closeButton = new Button("Close");
-		final Label textToServerLabel = new Label();
-		final HTML serverResponseLabel = new HTML();
-		final VerticalPanel dialogVPanel = new VerticalPanel();
-		dialogVPanel.addStyleName("dialogVPanel");
-		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-		dialogVPanel.add(closeButton);
-		dialogBox.setWidget(dialogVPanel);
 		
 		// Quando viene cliccato il bottone di chiusura del popup, riabilito gli altri bottoni.
 		closeButton.addClickHandler(new ClickHandler() {
@@ -371,9 +395,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 
 		// Handler che gestisce i bottoni di invio della query e del train.
 		class MyHandler implements ClickHandler, KeyUpHandler {
-			/**
-			 * Fired when the user clicks on the sendButton.
-			 */
+			// Quando c'e' un evento onClick, guardo che pulsante e' stato premuto. 
 			public void onClick(ClickEvent event) {
 				Button b = (Button)event.getSource();
 				if(b.getTitle().equals("Send"))
@@ -381,10 +403,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 				else if(b.getTitle().equals("Train"))
 					sendTrainRequestToServer();
 			}
-
-			/**
-			 * Fired when the user types in the nameField.
-			 */
+			// Viene gestito anche la pressione del tasto enter sul TextBox della query.
 			public void onKeyUp(KeyUpEvent event) {
 				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
 					// Quando premo invio nella casella di testo riservata alla query, la invio al server.
@@ -392,92 +411,117 @@ public class Tutorial_gae_dm implements EntryPoint {
 				}
 			}
 
-			/**
-			 * Send query to the server and wait for a response.
-			 */
+			// Invio della query al server e aspetto la risposta.
 			private void sendQueryToServer() {
 				// First, we validate the input.
 				String textToServer = queryField.getText();
-
-				// Then, we send the input to the server.
+				final Label textToServerLabel = new Label(textToServer);
+				// Disabilito i bottoni.
 				sendQueryButton.setEnabled(false);
 				sendTrainButton.setEnabled(false);
-				textToServerLabel.setText(textToServer);
-				serverResponseLabel.setText("");
+				// Richiamo la funzione del server.
 				greetingService.doPredict(textToServer,
 						new AsyncCallback<String>() {
 							public void onFailure(Throwable caught) {
-								// Show the RPC error message to the user
-								dialogVPanel.clear();
+								// Fallimento.
+								VerticalPanel dialogVPanel = new VerticalPanel();
+								HTML serverResponseLabel = new HTML();
 								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								dialogVPanel.add(serverResponseLabel);
-								dialogBox.setText("Remote Procedure Call - Failure");
 								serverResponseLabel.addStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(SERVER_ERROR);
-								dialogBox.center();
-								closeButton.setFocus(true);
+								dialogVPanel.add(serverResponseLabel);
+								showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
 							}
 
 							public void onSuccess(String result) {
-								dialogVPanel.clear();
+								// Successo.
+								VerticalPanel dialogVPanel = new VerticalPanel();
+								HTML serverResponseLabel = new HTML();
 								dialogVPanel.add(new HTML("<b>Sending query to the server:</b>"));
 								dialogVPanel.add(textToServerLabel);
 								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								dialogVPanel.add(serverResponseLabel);
-								dialogBox.setText("Remote Procedure Call");
-								serverResponseLabel.removeStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(result);
-								dialogBox.center();
-								closeButton.setFocus(true);
+								dialogVPanel.add(serverResponseLabel);
+								showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
 							}
 						});
 			}
 			
-			/**
-			 * Send train request to the server and wait for a response.
-			 */
+			// Invio la richiesta di train al server e aspetto la risposta.
 			private void sendTrainRequestToServer() {
-				// First, we validate the input.
-				String textToServer = queryField.getText();
 
-				// Then, we send the input to the server.
+				// Disabilito i bottoni.
 				sendQueryButton.setEnabled(false);
 				sendTrainButton.setEnabled(false);
-				textToServerLabel.setText(textToServer);
-				serverResponseLabel.setText("");
+				// Viene richiamata la funzione del server.
 				greetingService.doTrain(
 						new AsyncCallback<String>() {
 							public void onFailure(Throwable caught) {
-								// Show the RPC error message to the user
-								dialogVPanel.clear();
+								// Fallimento.
+								VerticalPanel dialogVPanel = new VerticalPanel();
+								HTML serverResponseLabel = new HTML();
 								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								dialogVPanel.add(serverResponseLabel);
-								dialogBox.setText("Remote Procedure Call - Failure");
 								serverResponseLabel.addStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(SERVER_ERROR);
-								dialogBox.center();
-								closeButton.setFocus(true);
+								dialogVPanel.add(serverResponseLabel);
+								showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
 							}
 
 							public void onSuccess(String result) {
-								dialogBox.setText("Remote Procedure Call");
-								dialogVPanel.clear();
+								// Successo.
+								VerticalPanel dialogVPanel = new VerticalPanel();
+								HTML serverResponseLabel = new HTML();
 								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								dialogVPanel.add(serverResponseLabel);
-								serverResponseLabel.removeStyleName("serverResponseLabelError");
 								serverResponseLabel.setHTML(result);
-								dialogBox.center();
-								closeButton.setFocus(true);
+								dialogVPanel.add(serverResponseLabel);
+								showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
 							}
 						});
 			}
 		}
 
-		// Add a handler to send the name to the server
+		// Aggiungo l'handler ai bottoni.
 		MyHandler handler = new MyHandler();
 		sendQueryButton.addClickHandler(handler);
 		sendTrainButton.addClickHandler(handler);
 		queryField.addKeyUpHandler(handler);
 	}
 	
+	/**
+	 * Visualizzazione di un DialogBox
+	 * @param titleBox Titolo del DialogBox.
+	 * @param dialogVPanel Contenuto del DialogBox.
+	 * @param closeButton Bottoni di chiusura del DialogBox.
+	 */
+	private void showDialogBox(String titleBox, VerticalPanel dialogVPanel, Button closeButton){
+		// Imposto i vari componenti del DialogBox.
+		dialogBox.setText("Remote Procedure Call");
+		dialogBox.setAnimationEnabled(true);
+		dialogVPanel.addStyleName("dialogVPanel");
+		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
+		dialogBox.setWidget(dialogVPanel);
+		
+		final Button hideButton = new Button("Close");
+		if(closeButton == null){
+			// Quando viene cliccato il bottone di chiusura del popup, nascondo il DialogBox.
+			hideButton.addClickHandler(new ClickHandler() {
+				public void onClick(ClickEvent event) {
+					dialogBox.hide();
+				}
+			});
+			dialogVPanel.add(hideButton);
+			hideButton.setFocus(true);
+		}
+		else{
+			dialogVPanel.add(closeButton);
+			closeButton.setFocus(true);
+		}
+		// Cancello quello che c'era prima.
+		dialogBox.clear();
+		// Inserisco il nuovo contenuto.
+		dialogBox.setWidget(dialogVPanel);
+		// Visualizzo il DialogBox.
+		dialogBox.center();
+		
+	}
 }

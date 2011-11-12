@@ -43,7 +43,11 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @SuppressWarnings("serial")
 public class GreetingServiceImpl extends RemoteServiceServlet implements GreetingService {
 	
+	// Elemento usato nelle Prediction API.
 	private Prediction prediction = null;
+	
+	// Modello di weka.
+	private ModelWeka model = null;
 	
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
@@ -100,21 +104,25 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	
 	@Override
 	public String serviceWeka(String nameFile){
-		ModelWeka model;
 		String result = null;
 		// Creazione del modello.
 		model = new ModelWeka();
 		// Esecuzione della classificazione.
-		result = model.doJob(nameFile);
-		if(result!=null){
-			if(result.equals(""))
-				result = "Error in the classifier";
-		}
-		else
-			result = "Error in the classifier";
+		result = model.makeClassifier(nameFile);
 		
 		return result;
 	}
+	
+	@Override
+	public String classifyMessage(String instance) throws Exception{
+		if(model==null)
+			throw new Exception("No model available. Load the model.");
+		else{
+			// Esecuzione della predizione.
+			String result = model.classifyMessage(instance);
+			return result;
+		}
+	}	
 
 	@Override
 	public Vector<String> datasetWeka() {

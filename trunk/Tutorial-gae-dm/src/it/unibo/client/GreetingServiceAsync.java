@@ -49,4 +49,11 @@ public interface GreetingServiceAsync {
 	 * @param callback Esito del train.
 	 */
 	void doTrain(AsyncCallback<String> callback);
+
+	/**
+	 * Predizione dell'istanza.
+	 * @param instance Instanza da predire.
+	 * @param callback Predizione.
+	 */
+	void classifyMessage(String instance, AsyncCallback<String> callback);
 }

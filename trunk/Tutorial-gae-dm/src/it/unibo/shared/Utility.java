@@ -21,7 +21,7 @@ public class Utility {
 	// OAuth 2 scope.
 	public static final String SCOPE = "https://www.googleapis.com/auth/prediction";
 	// Locazioni del bucket nello storage. 
-	public static final String STORAGE_DATA_LOCATION = "grahelloprediction/language_id.txt";
+	public static final String STORAGE_DATA_LOCATION = "fabiohelloprediction/language_id.txt";
 	// Nome del modello creato dopo aver fatto il train.
 	public static final String MODEL_ID = "language_prediction_model";
 	

@@ -51,4 +51,12 @@ public interface GreetingService extends RemoteService {
 	 * @return Esito del train.
 	 */
 	String doTrain();
+
+	/**
+	 * Predizione dell'istanza.
+	 * @param instance Instanza da predire.
+	 * @return Predizione.
+	 * @throws Exception Modello non caricato o istanza non corretta.
+	 */
+	String classifyMessage(String instance) throws Exception;
 }
