@@ -1,6 +1,7 @@
 package it.unibo.client;
 
 
+import it.unibo.shared.Attributo;
 import it.unibo.shared.RecordQuestbook;
 
 import java.util.Vector;
@@ -26,7 +27,7 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TabBar;
 import com.google.gwt.user.client.ui.TextArea;
@@ -54,13 +55,28 @@ public class Tutorial_gae_dm implements EntryPoint {
 	public void onModuleLoad() {
 		// Menu' tab per selezionare il tutorial desiderato.
 		final TabBar widget = new TabBar();
-		
 		widget.addTab("Google Cloud SQL");
 	    widget.addTab("Weka");
 	    widget.addTab("Prediction API");
-	    widget.selectTab(0);
 	    widget.addSelectionHandler(new SelectionHandler<Integer>() {
 	        public void onSelection(SelectionEvent<Integer> event) {
+	    	    // Aggiorno il tab selezionato
+	    	    greetingService.updateTabSelected(event.getSelectedItem().intValue(), new AsyncCallback<Void>() {
+					@Override
+					public void onSuccess(Void result) {
+					}
+					@Override
+					public void onFailure(Throwable caught) {
+						// Fallimento.
+						VerticalPanel dialogVPanel = new VerticalPanel();
+						HTML serverResponseLabel = new HTML();
+						dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+						serverResponseLabel.addStyleName("serverResponseLabelError");
+						serverResponseLabel.setHTML(SERVER_ERROR);
+						dialogVPanel.add(serverResponseLabel);
+						showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
+					}
+				});
 	            // A seconda di cosa e' stato selezionato, visualizzo il tutorial.
 	        	if(event.getSelectedItem().intValue() == 0)
 	        		Cloud();
@@ -73,20 +89,37 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    
 	    widget.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
 	    	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
-	    		if(event.getItem().intValue() != widget.getSelectedTab())
-	    			// Se il tab selezionato e' diverso da quello corrente, chiedo conferma dell'operazione.
-	    			if(!Window.confirm("You really want to leave '"
-	    			    + widget.getTabHTML(widget.getSelectedTab())
-	    			    + "' and go to '"
-	    			    + widget.getTabHTML(event.getItem())
-	    			    + "'?"))
-	    				// Se l'utente ha fatto annulla, cancello l'evento. Cioè non vado nella SelectionHandler.
-	    				event.cancel();
+	    		if(widget.getSelectedTab()!=-1)
+	    			if(event.getItem().intValue() != widget.getSelectedTab())
+	    				// Se il tab selezionato e' diverso da quello corrente, chiedo conferma dell'operazione.
+	    				if(!Window.confirm("You really want to leave '"
+	    					+ widget.getTabHTML(widget.getSelectedTab())
+	    					+ "' and go to '"
+	    					+ widget.getTabHTML(event.getItem())
+	    					+ "'?"))
+	    					// Se l'utente ha fatto annulla, cancello l'evento. Cioè non vado nella SelectionHandler.
+	    					event.cancel();
 	        }
 	    });
-	    // Riseleziono il primo Tab perche' cosi' inizializzo la pagina con il contenuto per il
+	    // Seleziono il primo Tab perche' cosi' inizializzo la pagina con il contenuto per il
 	    // tutorial Google Cloud SQL.
-	    widget.selectTab(0);
+	    greetingService.tabSelected(new AsyncCallback<Integer>() {
+			@Override
+			public void onSuccess(Integer result) {
+				widget.selectTab(result);
+			}
+			@Override
+			public void onFailure(Throwable caught) {
+				// Fallimento.
+				VerticalPanel dialogVPanel = new VerticalPanel();
+				HTML serverResponseLabel = new HTML();
+				dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+				serverResponseLabel.addStyleName("serverResponseLabelError");
+				serverResponseLabel.setHTML(SERVER_ERROR);
+				dialogVPanel.add(serverResponseLabel);
+				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
+			}
+		});
 	    RootPanel.get("tab").add(widget);
 	}
 	
@@ -180,27 +213,35 @@ public class Tutorial_gae_dm implements EntryPoint {
 	 */
 	private void Weka(){
 		// Pannello principale.
-		final HorizontalPanel hMainPanel = new HorizontalPanel();
+		final VerticalPanel hMainPanel = new VerticalPanel();
+		// Pannello principale dei controlli.
+		final HorizontalPanel hMainControlPanel = new HorizontalPanel();
+		// Pannello principale del dataset.
+		final HorizontalPanel hMainDatasetPanel = new HorizontalPanel();
 		final VerticalPanel vFirstPanel = new VerticalPanel();
 		final VerticalPanel vSecondPanel = new VerticalPanel();
-		final HorizontalPanel vThirdPanel = new HorizontalPanel();
+		final VerticalPanel vThirdPanel = new VerticalPanel();
+		final VerticalPanel vFourthPanel = new VerticalPanel();
 		// Pannello che contiene gli elementi della form.
 		final VerticalPanel vFormPanel = new VerticalPanel();
 		// Form upload file.
 		final FormPanel formUpload = new FormPanel("");
-		// Pannello contenente gli elementi della form di upload dei file.
-		final VerticalPanel vFilePanel = new VerticalPanel();
+		// ListBox contenente i file gia' caricati.
+		final ListBox listDataset = new ListBox();
 		// Serve per poter caricare un file.
 		final FileUpload upload = new FileUpload();
 		// Bottone per usare il dataset.
 		final Button useDataset = new Button("Use Dataset");
-		// TextBox dove e' possibile inserire l'istanza da classificare.
-		final TextBox instanceField = new TextBox();
-		instanceField.setText("instance");
 		// Bottone per classificare una istanza.
 		final Button predictInstance = new Button("Classify");
 		// Bottoni per il caricamento dei dataset.
 		final Button loadDataset = new Button("Load Dataset");
+		//Pannello per l'inserimento della predizione
+		final HorizontalPanel vPredictPanel = new HorizontalPanel();
+		//Pannello per l'inserimento della predizione
+		final VerticalPanel vPredictNamePanel = new VerticalPanel();
+		//Pannello per l'inserimento della predizione
+		final VerticalPanel vPredictAttributePanel = new VerticalPanel();
 		
 		// Setto le proprieta' della form upload.
 		formUpload.setEncoding(FormPanel.ENCODING_MULTIPART);
@@ -224,37 +265,65 @@ public class Tutorial_gae_dm implements EntryPoint {
 		predictInstance.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				useDataset.setEnabled(false);
-				loadDataset.setEnabled(false);
-				predictInstance.setEnabled(false);
-				String instance = instanceField.getText();
-				greetingService.classifyMessage(instance, new AsyncCallback<String>() {
-					@Override
-					public void onSuccess(String result) {
-						// Successo.
-						VerticalPanel dialogVPanel = new VerticalPanel();
-						HTML serverResponseLabel = new HTML();
-						dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-						serverResponseLabel.setHTML(result);
-						dialogVPanel.add(serverResponseLabel);
-						showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
-
+				String instance = "";
+				boolean error = false;
+				// Mi creo l'istanza settata dall'utente, inserendo tutti gli attributi 
+				// separati da una ",".
+				for(int i=0;i<vPredictAttributePanel.getWidgetCount();i++){
+					// Scorro tutti i widget del pannello, se è un ListBox o un TextBox,
+					// Significa che quel widget e' un attributo.
+					if(vPredictAttributePanel.getWidget(i) instanceof ListBox){
+						ListBox tempListBox = ((ListBox)vPredictAttributePanel.getWidget(i));
+						instance = instance.concat(tempListBox.getItemText(tempListBox.getSelectedIndex()) + ",");
 					}
-					@Override
-					public void onFailure(Throwable caught) {
-						// Fallimento.
-						VerticalPanel dialogVPanel = new VerticalPanel();
-						HTML serverResponseLabel = new HTML();
-						dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-						serverResponseLabel.addStyleName("serverResponseLabelError");
-						if(caught.getMessage().startsWith("Internal Error -"))
-							serverResponseLabel.setHTML(caught.getMessage());
-						else
-							serverResponseLabel.setHTML(SERVER_ERROR);
-						dialogVPanel.add(serverResponseLabel);
-						showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
+					if(vPredictAttributePanel.getWidget(i) instanceof TextBox){
+						TextBox tempTextBox = ((TextBox)vPredictAttributePanel.getWidget(i));
+						try {
+							double value = Double.valueOf(tempTextBox.getText());
+							instance = instance.concat(String.valueOf(value) + ",");
+						}catch(NumberFormatException e){
+							error = true;
+							break;
+						}
 					}
-				});
+				}
+				if(error)
+					Window.alert("Insert all fields correctly");
+				else{
+					// Elimino l'ultima virgola
+					instance = instance.substring(0, instance.length()-1);
+					// Disabilito i pulsanti.
+					useDataset.setEnabled(false);
+					loadDataset.setEnabled(false);
+					predictInstance.setEnabled(false);
+					greetingService.classifyMessage(instance, new AsyncCallback<String>() {
+						@Override
+						public void onSuccess(String result) {
+							// Successo.
+							VerticalPanel dialogVPanel = new VerticalPanel();
+							HTML serverResponseLabel = new HTML();
+							dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+							serverResponseLabel.setHTML(result);
+							dialogVPanel.add(serverResponseLabel);
+							showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
+	
+						}
+						@Override
+						public void onFailure(Throwable caught) {
+							// Fallimento.
+							VerticalPanel dialogVPanel = new VerticalPanel();
+							HTML serverResponseLabel = new HTML();
+							dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+							serverResponseLabel.addStyleName("serverResponseLabelError");
+							if(caught.getMessage().startsWith("Internal Error -"))
+								serverResponseLabel.setHTML(caught.getMessage());
+							else
+								serverResponseLabel.setHTML(SERVER_ERROR);
+							dialogVPanel.add(serverResponseLabel);
+							showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
+						}
+					});
+				}
 			}
 		});
 		
@@ -272,27 +341,25 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 		});
 		// Sistemo la prima parte del pannello principale.
-		vFirstPanel.add(new Label("Load DataSet"));
+		vFirstPanel.add(new HTML("<br><b>Load DataSet:</b>"));
 		vFormPanel.add(upload);
 		vFormPanel.add(loadDataset);
 		formUpload.add(vFormPanel);
 		vFirstPanel.add(formUpload);
 		
-		vSecondPanel.add(new Label("Use Dataset"));
+		vSecondPanel.add(new HTML("<br><b>Use DataSet:</b>"));
 		// Richiedo al sever di leggere dal datastore tutti i file gia' caricati.
 		greetingService.datasetWeka(new AsyncCallback<Vector<String>>() {
 			@Override
 			public void onSuccess(Vector<String> result) {
+				listDataset.addItem("File Upload");
 				if(result.size()>0){
 					// Inserisco i dati nella tabella.
-					for(int i=0;i<result.size();i++) {
-						vFilePanel.add(new RadioButton("group", result.get(i)));
-					}
-					// Aggiungo nel secondo panello, la tabella.
-					vSecondPanel.add(vFilePanel);
+					for(int i=0;i<result.size();i++)
+						listDataset.addItem(result.get(i));
 				}
-				else
-					vSecondPanel.add(new Label("No file upload!!"));
+				// Aggiungo nel secondo panello, la tabella.
+				vSecondPanel.add(listDataset);
 				vSecondPanel.add(useDataset);
 			}
 			
@@ -313,40 +380,82 @@ public class Tutorial_gae_dm implements EntryPoint {
 		useDataset.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				useDataset.setEnabled(false);
-				loadDataset.setEnabled(false);
-				predictInstance.setEnabled(false);
-				RadioButton temp = null;
-				boolean select = false;
-				String nameFile = "";
-				// Cerco se c'e' almeno un RadioButton selezionato.
-				for(int i=0;i<vFilePanel.getWidgetCount();i++) {
-					temp = (RadioButton)(vFilePanel.getWidget(i));
-					if(temp.getValue()) {
-						// RadioButton selezionato.
-						nameFile = temp.getText();
-						select=true;
-						break;
-					}
-				}
-				
-				if(!select)
+				String nameFile = listDataset.getItemText(listDataset.getSelectedIndex());
+				if(listDataset.getSelectedIndex()==0)
 					// Non c'e' neanche un RadioButton selezionato.
-					Window.alert("Select at least one file!");
+					Window.alert("Select one file!");
 				else{
+					useDataset.setEnabled(false);
+					loadDataset.setEnabled(false);
+					predictInstance.setEnabled(false);
 					// C'e' almeno un RadioButton selezionato.
 					greetingService.serviceWeka(nameFile, new AsyncCallback<String>() {
 						@Override
 						public void onSuccess(String result) {
 							if (result.contains("\n"))
 								result = result.replaceAll("\n", "<br>");
-							// Successo.
-							VerticalPanel dialogVPanel = new VerticalPanel();
+							vThirdPanel.clear();
+							// Successo. Imposto il terzo pannello con l'albero del dataset.
 							HTML serverResponseLabel = new HTML();
-							dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+							vThirdPanel.add(new HTML("<br><b>Tree classifier:</b>"));
 							serverResponseLabel.setHTML(result);
-							dialogVPanel.add(serverResponseLabel);
-							showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
+							vThirdPanel.add(serverResponseLabel);
+							// Imposto il quarto pannello in modo tale da fare la predizione.
+							greetingService.attributesDataset(new AsyncCallback<Vector<Attributo>>() {
+								@Override
+								public void onSuccess(Vector<Attributo> result) {
+									vFourthPanel.clear();
+									vPredictPanel.clear();
+									vPredictNamePanel.clear();
+									vPredictAttributePanel.clear();
+									Attributo temp;
+									// Scorro tutti gli attributi.
+									for(int i=0;i<result.size();i++){
+										temp = result.get(i);
+										vPredictNamePanel.add(new Label(temp.getName()));
+										if(temp.isNominal()){
+											// Se l'attributo e' Nominal allora creo una ListBox.		
+											ListBox widget = new ListBox();
+											Vector<String> values = temp.getValues();
+											for(int j=0;j<values.size();j++)
+												widget.addItem(values.get(j));
+											vPredictAttributePanel.add(widget);
+										}
+										if(temp.isNumeric()){
+											// Se l'attributo e' Numeric allora creo una TextBox.
+											String range = "";
+											range = "min: " + temp.getMinNumericBound();
+											range = range.concat(" and max: " + temp.getMaxNumericBound());
+											TextBox widget = new TextBox();
+											widget.setText(range);
+											vPredictAttributePanel.add(widget);
+										}										
+									}
+									vPredictAttributePanel.add(predictInstance);
+									vPredictPanel.add(vPredictNamePanel);
+									vPredictPanel.add(vPredictAttributePanel);
+									vFourthPanel.add(new HTML("<br><b>Predict sentence:</b>"));
+									vFourthPanel.add(vPredictPanel);
+									// Riabilito i pulsanti.
+									useDataset.setEnabled(true);
+									loadDataset.setEnabled(true);
+									predictInstance.setEnabled(true);
+								}
+								@Override
+								public void onFailure(Throwable caught) {
+									// Fallimento.
+									VerticalPanel dialogVPanel = new VerticalPanel();
+									HTML serverResponseLabel = new HTML();
+									dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+									serverResponseLabel.addStyleName("serverResponseLabelError");
+									if(caught.getMessage().startsWith("Internal Error -"))
+										serverResponseLabel.setHTML(caught.getMessage());
+									else
+										serverResponseLabel.setHTML(SERVER_ERROR);
+									dialogVPanel.add(serverResponseLabel);
+									showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
+								}
+							});
 						}
 						@Override
 						public void onFailure(Throwable caught) {
@@ -363,18 +472,17 @@ public class Tutorial_gae_dm implements EntryPoint {
 							showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
 						}
 					});
-					// Imposto il terzo pannello in modo tale da fare la predizione.
-//					vThirdPanel.add(instanceField);
-					
-					vThirdPanel.add(predictInstance);
 				}
 			}
 		});
 		
 		// Aggiungo la varie parti al pannello principale.
-		hMainPanel.add(vFirstPanel);
-		hMainPanel.add(vSecondPanel);
-		hMainPanel.add(vThirdPanel);
+		hMainControlPanel.add(vFirstPanel);
+		hMainControlPanel.add(vSecondPanel);
+		hMainPanel.add(hMainControlPanel);
+		hMainDatasetPanel.add(vThirdPanel);
+		hMainDatasetPanel.add(vFourthPanel);
+		hMainPanel.add(hMainDatasetPanel);
 		RootPanel.get("content").add(hMainPanel);
 	}
 	

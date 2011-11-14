@@ -1,6 +1,7 @@
 package it.unibo.server;
 
 
+import it.unibo.shared.Attributo;
 import it.unibo.shared.DownloadableFile;
 import it.unibo.shared.PMF;
 
@@ -11,7 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Vector;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
@@ -59,7 +62,7 @@ public class ModelWeka extends RemoteServiceServlet {
 					// Setto i valori dell'istanza in base al suo tipo.
 					Attribute attribute = dataSet.attribute(dataSet.firstInstance().attribute(i).name());
 					if(dataSet.firstInstance().attribute(i).isNumeric())
-						instance.setValue(attribute, Integer.parseInt(values[i]));
+						instance.setValue(attribute, Double.parseDouble(values[i]));
 					else
 						instance.setValue(attribute, values[i]);
 				}
@@ -150,6 +153,41 @@ public class ModelWeka extends RemoteServiceServlet {
 		finally {
 			if(query!=null)
 				query.closeAll();
+		}
+	}
+	
+	/**
+	 * Legge gli attributi del dataset.
+	 * @return Attributi del dataset caricato precedentemente.
+	 * @throws Exception Non e' stato caricato nessun dataset.
+	 */
+	@SuppressWarnings("unchecked")
+	public Vector<Attributo> attributesDataset() throws Exception{
+		if (m_Data == null)
+			throw new Exception("Internal Error - No dataset");
+		else{
+			Vector<Attributo> listAttribute = new Vector<Attributo>();
+			Enumeration<Attribute> temp = (Enumeration<Attribute>)m_Data.enumerateAttributes();
+			while(temp.hasMoreElements()){
+				// Scorro tutti gli attributi e li metto in un vettore. Non ho potuto usare la 
+				// classe Attribute di Weka perche' il client non ha la libreria di Weka.
+				Attribute attr = temp.nextElement();
+				Vector<String> valuesAttribute = null;
+				if (attr.isNominal()){
+					Enumeration values = attr.enumerateValues();
+					valuesAttribute = new Vector<String>();
+					while(values.hasMoreElements())
+						valuesAttribute.add((String)values.nextElement());
+				}
+				// Aggiungo il nuovo attributo.
+				listAttribute.add(new Attributo(attr.name(),
+						attr.isNominal(),
+						attr.isNumeric(),
+						valuesAttribute,
+					 	attr.getLowerNumericBound(),
+					 	attr.getUpperNumericBound()));
+			}
+			return listAttribute;
 		}
 	}
 	
