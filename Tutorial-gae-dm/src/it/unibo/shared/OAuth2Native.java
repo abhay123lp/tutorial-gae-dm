@@ -26,29 +26,43 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 
 /**
- * Implements OAuth authentication "native" flow recommended for installed clients in which the end
- * user must grant access in a web browser and then copy a code into the application.
- *
- * @author Yaniv Inbar
+ * Implementa l'autentificazione attraverso OAuth.
+ * 
+ * @author Fabio Magnani, Enrico Gramellini
  */
 public class OAuth2Native {
 
+	// Codice ricevuto da Google quando l'utente da il consenso nella richiesta di autorizzazione.
 	private static String CODE = "";
 	
+	/**
+	 * @param code Codice di sicurezza ricevuto da Google.
+	 */
 	public static void setCode(String code){
 		CODE = code;
 	}
 	
+	/**
+	 * @return Codice di sicurezza ricevuto da Google.
+	 */
 	public static String getCode(){
 		return CODE;
 	}
 	
+	/**
+	 * @param transport Oggetto utile per l'acceso.
+	 * @param jsonFactory Oggetto utile per l'acceso.
+	 * @param clientId Client ID delle credenziali di OAuth.
+	 * @param clientSecret Client Secret delle credenziali di OAuth.
+	 * @return Oggetto che mi consente di usare le Prediction API.
+	 */
 	public static GoogleAccessProtectedResource exchangeCodeForToken(HttpTransport transport,
 	      JsonFactory jsonFactory,
 	      String clientId,
 	      String clientSecret){
 	    
 		AccessTokenResponse response = null;
+		// Redirezione dopo aver preso il token.
 		String redirectUrl = "";
 		if(Utility.isStartLocal())
 			redirectUrl = "http://127.0.0.1:8888/receiverCode";
@@ -56,28 +70,30 @@ public class OAuth2Native {
 			redirectUrl = "http://tutorial-gae-dm.appspot.com/receiverCode";
 		
 	    try {
-			response = exchangeCodeForAccessToken(redirectUrl,
-			transport,
-			jsonFactory,
-			clientId,
-			clientSecret);
+	    	// Prendo il token attraverso il codice.
+			response = exchangeCodeForAccessToken(redirectUrl,transport,jsonFactory,clientId,clientSecret);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	
-		return new GoogleAccessProtectedResource(response.accessToken,
-			transport,
-			jsonFactory,
-			clientId,
-			clientSecret,
-			response.refreshToken) {
-		
+		// Ritorno l'oggetto che mi consente di usare le Prediction API.
+		return new GoogleAccessProtectedResource(response.accessToken,transport,jsonFactory,clientId,clientSecret,response.refreshToken) {
 		    @Override
 		    protected void onAccessToken(String accessToken) {
 		    }
 		};
 	}
 
+  	/**
+  	 * Prendo il token attraverso il codice.
+  	 * @param redirectUrl Redirezione dopo aver preso il token.
+  	 * @param transport Oggetto utile per l'acceso.
+  	 * @param jsonFactory Oggetto utile per l'acceso.
+	 * @param clientId Client ID delle credenziali di OAuth.
+	 * @param clientSecret Client Secret delle credenziali di OAuth.
+  	 * @return Token.
+  	 * @throws IOException 
+  	 */
   	private static AccessTokenResponse exchangeCodeForAccessToken(String redirectUrl,
 		HttpTransport transport,
 		JsonFactory jsonFactory,
@@ -85,7 +101,7 @@ public class OAuth2Native {
 		String clientSecret) throws IOException {
   		
   		try {
-  			// exchange code for an access token
+  			// Scambio il codice per il token di accesso.
   			return new GoogleAuthorizationCodeGrant(new NetHttpTransport(),
 				jsonFactory,
 				clientId,
@@ -95,10 +111,7 @@ public class OAuth2Native {
   		} 
   		catch (HttpResponseException e) {
   			AccessTokenErrorResponse response = e.getResponse().parseAs(AccessTokenErrorResponse.class);
-  			System.out.println();
-  			System.err.println("Error: " + response.error);
-  			System.out.println();
-  			System.exit(1);
+  			System.out.println("Error: " + response.error);
   			return null;
   		}
   }
