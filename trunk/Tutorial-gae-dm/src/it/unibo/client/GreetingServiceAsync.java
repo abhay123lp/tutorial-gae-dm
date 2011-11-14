@@ -1,6 +1,7 @@
 package it.unibo.client;
 
 
+import it.unibo.shared.Attributo;
 import it.unibo.shared.RecordQuestbook;
 
 import java.util.Vector;
@@ -32,6 +33,12 @@ public interface GreetingServiceAsync {
 	void serviceWeka(String nameFile,AsyncCallback<String> callback);
 	
 	/**
+	 * Lettura degli attributi del dataset caricato precedentemente.
+	 * @param callback Attributi del dataset.
+	 */
+	void attributesDataset(AsyncCallback<Vector<Attributo>> callback);	
+	
+	/**
 	 * Verifica se e' gi' stato fatto la richiesta di autorizzazione.
 	 * @param callback Uno se l'autorizzazione e' gia stata eseguita, zero altrimenti.
 	 */
@@ -56,4 +63,15 @@ public interface GreetingServiceAsync {
 	 * @param callback Predizione.
 	 */
 	void classifyMessage(String instance, AsyncCallback<String> callback);
+
+	/**
+	 * @param callback Tab del cliente selezionato.
+	 */
+	void tabSelected(AsyncCallback<Integer> callback);
+
+	/**
+	 * @param tab Tab selezionato.
+	 * @param callback Void.
+	 */
+	void updateTabSelected(int tab, AsyncCallback<Void> callback);
 }

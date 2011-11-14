@@ -1,6 +1,7 @@
 package it.unibo.client;
 
 
+import it.unibo.shared.Attributo;
 import it.unibo.shared.RecordQuestbook;
 
 import java.util.Vector;
@@ -36,6 +37,12 @@ public interface GreetingService extends RemoteService {
 	String serviceWeka(String nameFile) throws Exception;
 	
 	/**
+	 * Lettura degli attributi del dataset caricato precedentemente.
+	 * @return Attributi del dataset.
+	 */
+	Vector<Attributo> attributesDataset() throws Exception;
+	
+	/**
 	 * Verifica se e' gi' stato fatto la richiesta di autorizzazione.
 	 * @return Uno se l'autorizzazione e' gia stata eseguita, zero altrimenti.
 	 */
@@ -61,4 +68,14 @@ public interface GreetingService extends RemoteService {
 	 * @throws Exception Modello non caricato o istanza non corretta.
 	 */
 	String classifyMessage(String instance) throws Exception;
+
+	/**
+	 * @return Tab del cliente selezionato.
+	 */
+	int tabSelected();
+
+	/**
+	 * @param tab Tab selezionato.
+	 */
+	void updateTabSelected(int tab);
 }

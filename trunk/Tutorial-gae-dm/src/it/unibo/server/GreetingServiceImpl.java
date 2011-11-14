@@ -1,6 +1,7 @@
 package it.unibo.server;
 
 import it.unibo.client.GreetingService;
+import it.unibo.shared.Attributo;
 import it.unibo.shared.DownloadableFile;
 import it.unibo.shared.OAuth2ClientCredentials;
 import it.unibo.shared.OAuth2Native;
@@ -49,6 +50,9 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	
 	// Modello di weka.
 	private ModelWeka model = null;
+	
+	// Tab del client selezionato.
+	private int tabSelected = 0;
 	
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
@@ -116,16 +120,26 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return result;
 	}
 	
+	// Ritorna tutti gli attributi del dataset caricato precedentemente.
+	@Override
+	public Vector<Attributo> attributesDataset() throws Exception {
+		if(model==null)
+			throw new Exception("Internal Error - No model available. Load the model.");
+		else{
+			// Lettura degli attributi del dataset.
+			return model.attributesDataset();
+		}
+		
+	}
+	
     // Classifica un messaggio usando Weka.
 	@Override
 	public String classifyMessage(String instance) throws Exception{
 		if(model==null)
 			throw new Exception("Internal Error - No model available. Load the model.");
-		else{
+		else
 			// Esecuzione della predizione.
-			String result = model.classifyMessage(instance);
-			return result;
-		}
+			return model.classifyMessage(instance);
 	}	
 
     // Legge tutti i dataset gia' caricati per il tutorial Weka.
@@ -151,7 +165,19 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return listDataset;
 	}
 	
-	// Mi dice se devono essere chieste le autorizzazioni o meno per il tutorial sulle Prediction API.
+	// Mi dice quale tab e' selezionato
+    @Override
+    public int tabSelected(){
+    	return tabSelected;
+    }
+    
+	// Mi dice quale tab e' selezionato
+    @Override
+    public void updateTabSelected(int tab){
+    	tabSelected = tab;
+    }
+
+    // Mi dice se devono essere chieste le autorizzazioni o meno per il tutorial sulle Prediction API.
     @Override
     public int authorization(){
     	if(prediction==null)
@@ -264,6 +290,5 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	    System.out.println("Text: " + text);
 	    System.out.println("Predicted language: " + output.getOutputLabel());
   	}
-    
 
 }
