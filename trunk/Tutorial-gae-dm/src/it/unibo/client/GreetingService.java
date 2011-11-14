@@ -17,8 +17,9 @@ public interface GreetingService extends RemoteService {
 	/**
 	 * Legge tutti i dati della guestbook.
 	 * @return Vettore contenente tutti i messaggi scritti nel guestbook.
+	 * @throws Exception Errore nella lettura dal database.
 	 */
-	Vector<RecordQuestbook> dataCloud();
+	Vector<RecordQuestbook> dataCloud() throws Exception;
 	
 	/**
 	 * Legge quali dataset sono stati gia' caricati.
@@ -30,8 +31,9 @@ public interface GreetingService extends RemoteService {
 	 * Generazione del modello.
 	 * @param nameFile Nome del file contenente il dataset.
 	 * @return Modello generato.
+	 * @throws Exception Errore nel costruire il classificatore. 
 	 */
-	String serviceWeka(String nameFile);
+	String serviceWeka(String nameFile) throws Exception;
 	
 	/**
 	 * Verifica se e' gi' stato fatto la richiesta di autorizzazione.

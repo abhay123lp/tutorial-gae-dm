@@ -34,7 +34,8 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
- * Entry point classes define <code>onModuleLoad()</code>.
+ * Classe entry point.
+ * @author Fabio Magnani, Enrico Gramellini
  */
 public class Tutorial_gae_dm implements EntryPoint {
 	// Messaggio di errore visualizzato quando il server non e' raggiungibile.
@@ -89,6 +90,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    RootPanel.get("tab").add(widget);
 	}
 	
+	/**
+	 * Gestione del tutorial riguardante Google Cloud SQL.
+	 */
 	private void Cloud(){
 		// Pannello principale.
 		final HorizontalPanel hMainPanel = new HorizontalPanel();
@@ -161,13 +165,19 @@ public class Tutorial_gae_dm implements EntryPoint {
 				VerticalPanel dialogVPanel = new VerticalPanel();
 				HTML serverResponseLabel = new HTML();
 				serverResponseLabel.addStyleName("serverResponseLabelError");
-				serverResponseLabel.setHTML(SERVER_ERROR);
+				if(caught.getMessage().startsWith("Internal Error -"))
+					serverResponseLabel.setHTML(caught.getMessage());
+				else
+					serverResponseLabel.setHTML(SERVER_ERROR);
 				dialogVPanel.add(serverResponseLabel);
 				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
 			}
 		});		
 	}
 	
+	/**
+	 * Gestione del tutorial riguardante l'uso di Weka con il datastore offerto da Google.
+	 */
 	private void Weka(){
 		// Pannello principale.
 		final HorizontalPanel hMainPanel = new HorizontalPanel();
@@ -188,7 +198,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 		final TextBox instanceField = new TextBox();
 		instanceField.setText("instance");
 		// Bottone per classificare una istanza.
-		final Button predictInstance = new Button("Classify");		
+		final Button predictInstance = new Button("Classify");
+		// Bottoni per il caricamento dei dataset.
+		final Button loadDataset = new Button("Load Dataset");
 		
 		// Setto le proprieta' della form upload.
 		formUpload.setEncoding(FormPanel.ENCODING_MULTIPART);
@@ -198,28 +210,54 @@ public class Tutorial_gae_dm implements EntryPoint {
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
 		
-		// Setto nel terzo pannello gli elementi per predire un'istanza.
-		vThirdPanel.add(instanceField);
-		vThirdPanel.add(predictInstance);
+		final Button closeButton = new Button("Close");
+		// Quando viene cliccato il bottone di chiusura del popup, riabilito gli altri bottoni.
+		closeButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogBox.hide();
+				useDataset.setEnabled(true);
+				loadDataset.setEnabled(true);
+				predictInstance.setEnabled(true);
+			}
+		});
 		
 		predictInstance.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
+				useDataset.setEnabled(false);
+				loadDataset.setEnabled(false);
+				predictInstance.setEnabled(false);
 				String instance = instanceField.getText();
 				greetingService.classifyMessage(instance, new AsyncCallback<String>() {
 					@Override
 					public void onSuccess(String result) {
-						Window.alert(result);
+						// Successo.
+						VerticalPanel dialogVPanel = new VerticalPanel();
+						HTML serverResponseLabel = new HTML();
+						dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+						serverResponseLabel.setHTML(result);
+						dialogVPanel.add(serverResponseLabel);
+						showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
+
 					}
 					@Override
 					public void onFailure(Throwable caught) {
-						Window.alert(caught.getMessage());
+						// Fallimento.
+						VerticalPanel dialogVPanel = new VerticalPanel();
+						HTML serverResponseLabel = new HTML();
+						dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+						serverResponseLabel.addStyleName("serverResponseLabelError");
+						if(caught.getMessage().startsWith("Internal Error -"))
+							serverResponseLabel.setHTML(caught.getMessage());
+						else
+							serverResponseLabel.setHTML(SERVER_ERROR);
+						dialogVPanel.add(serverResponseLabel);
+						showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
 					}
 				});
 			}
 		});
 		
-		Button loadDataset = new Button("Load Dataset");
 		// Aggiungo un handler che parte quando viene cliccato il bottone.
 		// Ricordo che addClickListener e' deprecato, quindi non l'ho usato.
 		loadDataset.addClickHandler(new ClickHandler() {
@@ -239,12 +277,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 		vFormPanel.add(loadDataset);
 		formUpload.add(vFormPanel);
 		vFirstPanel.add(formUpload);
-
 		
 		vSecondPanel.add(new Label("Use Dataset"));
 		// Richiedo al sever di leggere dal datastore tutti i file gia' caricati.
 		greetingService.datasetWeka(new AsyncCallback<Vector<String>>() {
-			
 			@Override
 			public void onSuccess(Vector<String> result) {
 				if(result.size()>0){
@@ -263,9 +299,13 @@ public class Tutorial_gae_dm implements EntryPoint {
 			@Override
 			public void onFailure(Throwable caught) {
 				// Fallimento.
-				// Pulisco il contenuto della pagina HTML.
-				RootPanel.get("content").clear();
-				Window.alert(SERVER_ERROR);
+				VerticalPanel dialogVPanel = new VerticalPanel();
+				HTML serverResponseLabel = new HTML();
+				dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+				serverResponseLabel.addStyleName("serverResponseLabelError");
+				serverResponseLabel.setHTML(SERVER_ERROR);
+				dialogVPanel.add(serverResponseLabel);
+				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
 			}
 		});
 		// Aggiungo un handler che parte quando viene cliccato il bottone.
@@ -273,6 +313,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 		useDataset.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
+				useDataset.setEnabled(false);
+				loadDataset.setEnabled(false);
+				predictInstance.setEnabled(false);
 				RadioButton temp = null;
 				boolean select = false;
 				String nameFile = "";
@@ -290,25 +333,41 @@ public class Tutorial_gae_dm implements EntryPoint {
 				if(!select)
 					// Non c'e' neanche un RadioButton selezionato.
 					Window.alert("Select at least one file!");
-				else
+				else{
 					// C'e' almeno un RadioButton selezionato.
 					greetingService.serviceWeka(nameFile, new AsyncCallback<String>() {
 						@Override
 						public void onSuccess(String result) {
 							if (result.contains("\n"))
 								result = result.replaceAll("\n", "<br>");
-							Window.alert(result);
-//							RootPanel.get("content").clear();
-//							RootPanel.get("content").add(new HTML(result));
+							// Successo.
+							VerticalPanel dialogVPanel = new VerticalPanel();
+							HTML serverResponseLabel = new HTML();
+							dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+							serverResponseLabel.setHTML(result);
+							dialogVPanel.add(serverResponseLabel);
+							showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
 						}
 						@Override
 						public void onFailure(Throwable caught) {
 							// Fallimento.
-							// Pulisco il contenuto della pagina HTML.
-							RootPanel.get("content").clear();
-							Window.alert(SERVER_ERROR);
+							VerticalPanel dialogVPanel = new VerticalPanel();
+							HTML serverResponseLabel = new HTML();
+							dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+							serverResponseLabel.addStyleName("serverResponseLabelError");
+							if(caught.getMessage().startsWith("Internal Error -"))
+								serverResponseLabel.setHTML(caught.getMessage());
+							else
+								serverResponseLabel.setHTML(SERVER_ERROR);
+							dialogVPanel.add(serverResponseLabel);
+							showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
 						}
 					});
+					// Imposto il terzo pannello in modo tale da fare la predizione.
+//					vThirdPanel.add(instanceField);
+					
+					vThirdPanel.add(predictInstance);
+				}
 			}
 		});
 		
@@ -319,6 +378,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 		RootPanel.get("content").add(hMainPanel);
 	}
 	
+	/**
+	 * Gestione del tutorial riguardante le Prediction API offerte da Google.
+	 */
 	private void Prediction(){
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
@@ -332,11 +394,22 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 			@Override
 			public void onFailure(Throwable caught) {
+				// Fallimento.
+				VerticalPanel dialogVPanel = new VerticalPanel();
+				HTML serverResponseLabel = new HTML();
+				dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+				serverResponseLabel.addStyleName("serverResponseLabelError");
+				serverResponseLabel.setHTML(SERVER_ERROR);
+				dialogVPanel.add(serverResponseLabel);
+				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
 			}
 		});
 		
 	}
 	
+	/**
+	 * Richiesta di autorizzazione per l'uso delle Prediction API.
+	 */
 	private void authorization(){
 		final Button sendAuthorization = new Button("Authorization");
 		// Form per le autorizzazioni per usare la api.		
@@ -356,6 +429,9 @@ public class Tutorial_gae_dm implements EntryPoint {
 		RootPanel.get("content").add(formPredict);
 	}
 	
+	/**
+	 * Uso delle Prediction API.
+	 */
 	private void prediction() {
 		// Pannello principale.
 		final HorizontalPanel hMainPanel = new HorizontalPanel();

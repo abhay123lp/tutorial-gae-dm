@@ -38,7 +38,8 @@ import com.google.appengine.api.rdbms.AppEngineDriver;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
- * The server side implementation of the RPC service.
+ * Server per le chiamate RPC da parte del client.
+ * @author Fabio Magnani, Enrico Gramellini.
  */
 @SuppressWarnings("serial")
 public class GreetingServiceImpl extends RemoteServiceServlet implements GreetingService {
@@ -64,8 +65,9 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html");
     }
 
+    // Legge i dati della guestbook per il tutorial Google Cloud SQL.
 	@Override
-	public Vector<RecordQuestbook> dataCloud() {
+	public Vector<RecordQuestbook> dataCloud() throws Exception {
 		// Dati della guestbook.
 		Vector<RecordQuestbook> listGuestbook = new Vector<RecordQuestbook>();
 		Connection c = null;
@@ -86,8 +88,8 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	    	}
 	    } 
 	    catch (SQLException e) {
-	        e.printStackTrace();
-	    } 
+	    	throw new Exception("Internal Error - Database connection failed"); 
+		} 
 	    finally {
 	    	if (c != null) {
 	    		try {
@@ -102,8 +104,9 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return listGuestbook;
 	}
 	
+    // Crea il classificatore per il tutorial su Weka.
 	@Override
-	public String serviceWeka(String nameFile){
+	public String serviceWeka(String nameFile) throws Exception{
 		String result = null;
 		// Creazione del modello.
 		model = new ModelWeka();
@@ -113,10 +116,11 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return result;
 	}
 	
+    // Classifica un messaggio usando Weka.
 	@Override
 	public String classifyMessage(String instance) throws Exception{
 		if(model==null)
-			throw new Exception("No model available. Load the model.");
+			throw new Exception("Internal Error - No model available. Load the model.");
 		else{
 			// Esecuzione della predizione.
 			String result = model.classifyMessage(instance);
@@ -124,9 +128,11 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		}
 	}	
 
+    // Legge tutti i dataset gia' caricati per il tutorial Weka.
+	@SuppressWarnings("unchecked")
 	@Override
 	public Vector<String> datasetWeka() {
-		// Dati della guestbook.
+		// Lista dei dataset caricati sul datastore.
 		Vector<String> listDataset = new Vector<String>();
 		
 		PersistenceManager pm = PMF.get().getPersistenceManager();
@@ -141,10 +147,11 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		}
 		query.closeAll();
 	    
-	    // Ritorno tutti i dati appena letti.
+	    // Ritorno la lista.
 		return listDataset;
 	}
 	
+	// Mi dice se devono essere chieste le autorizzazioni o meno per il tutorial sulle Prediction API.
     @Override
     public int authorization(){
     	if(prediction==null)

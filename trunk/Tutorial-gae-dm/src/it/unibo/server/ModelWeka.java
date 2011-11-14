@@ -7,10 +7,9 @@ import it.unibo.shared.PMF;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -40,26 +39,6 @@ public class ModelWeka extends RemoteServiceServlet {
 	private Classifier m_Classifier = new J48();
 	
 	public ModelWeka() {
-	}
-	
-	/**
-	 * Metodo che configura il classificatore a partire dal nome del file che lo contiene
-	 *
-	 * @param modelName Nome del file che contiene il modello.
-	 */
-	public void setClassifier(String modelName){
-		try {
-			Classifier model;
-			// Carico il modello
-			ObjectInputStream modelInObjectFile = new ObjectInputStream(new FileInputStream(modelName));
-			model = (Classifier) modelInObjectFile.readObject();
-			modelInObjectFile.close();
-			// Setto il modello.
-			this.m_Classifier = model;
-			System.out.println("Model "+modelName+" lodaded.");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	 
 	/**
@@ -105,7 +84,7 @@ public class ModelWeka extends RemoteServiceServlet {
 	public String classifyMessage(String message) throws Exception {
 		// Check whether classifier has been built.
 		if (m_Data.numInstances() == 0) {
-			throw new Exception("No classifier available.");
+			throw new Exception("Internal Error - No classifier available.");
 		}
 		  
 		// Creazione del messaggio.
@@ -119,7 +98,7 @@ public class ModelWeka extends RemoteServiceServlet {
 			return msg;
 		}
 		else
-			throw new Exception("Error creating instance");
+			throw new Exception("Internal Error - Error creating instance");
 	}
 	  
 	/**
@@ -127,48 +106,51 @@ public class ModelWeka extends RemoteServiceServlet {
 	 * @param dataFile Nome del file contenente il dataset da usare.
 	 * @return Albero del classificatore generato.
 	 */
-	public String makeClassifier(String dataFile) {
+	@SuppressWarnings("unchecked")
+	public String makeClassifier(String dataFile) throws Exception{
 		
-		byte[] buffer;   
+		byte[] buffer;
+		Query query = null;
 		try{
 			PersistenceManager pm = PMF.get().getPersistenceManager();
 			// Lettura del file.
-			Query query = pm.newQuery(DownloadableFile.class);
+			query = pm.newQuery(DownloadableFile.class);
 	        query.setFilter("fileName == argFileName");
 	        query.declareParameters("String argFileName");
-			try {
-				List<DownloadableFile> results = (List<DownloadableFile>) query.execute(dataFile);
-				if (!results.isEmpty()) {
-					if(results.size()==1){
-						// Array di byte che mi rappresentano il file letto.
-						buffer = results.get(0).getFile();
-						OutputStream b = new ByteArrayOutputStream();
-						b.write(buffer);
-						InputStream is = new ByteArrayInputStream(buffer);
-						// Creo i dati attraverso il file.
-						m_Data = new Instances(new BufferedReader(new InputStreamReader(is)));
-						m_Data.setClassIndex(m_Data.numAttributes() - 1);
-						// Costruisco il classificatore.
-						m_Classifier.buildClassifier(m_Data);
-						
-						// Chiudo gli elementi utilizzati.
-						b.close();
-						is.close();
-						
-						// Ritorno l'albero generato dal classificatore.
-						return m_Classifier.toString();
-					}
-					return "I found more file .arff";
+			List<DownloadableFile> results = (List<DownloadableFile>) query.execute(dataFile);
+			if (!results.isEmpty()) {
+				if(results.size()==1){
+					// Array di byte che mi rappresentano il file letto.
+					buffer = results.get(0).getFile();
+					OutputStream b = new ByteArrayOutputStream();
+					b.write(buffer);
+					InputStream is = new ByteArrayInputStream(buffer);
+					// Creo i dati attraverso il file.
+					m_Data = new Instances(new BufferedReader(new InputStreamReader(is)));
+					m_Data.setClassIndex(m_Data.numAttributes() - 1);
+					// Costruisco il classificatore.
+					m_Classifier.buildClassifier(m_Data);
+					
+					// Chiudo gli elementi utilizzati.
+					b.close();
+					is.close();
+					
+					// Ritorno l'albero generato dal classificatore.
+					return m_Classifier.toString();
 				}
-				return "No files .arff found";
-			} 
-			finally {
-				query.closeAll();
+				throw new Exception("Internal Error - I found more file .arff");
 			}
-		}catch (Exception e) {
-			e.printStackTrace();
+			else
+				throw new Exception("Internal Error - No files .arff found");
+		} catch (IOException e) {
+			throw new Exception("Internal Error - No files .arff found");
+		} catch (Exception e) {
+			throw new Exception("Internal Error - No files .arff found");
 		}
-		return "Error in the classifier";
+		finally {
+			if(query!=null)
+				query.closeAll();
+		}
 	}
 	
 }
