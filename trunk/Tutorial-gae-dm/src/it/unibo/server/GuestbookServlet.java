@@ -24,6 +24,7 @@ public class GuestbookServlet extends HttpServlet{
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException{
 		PrintWriter out = res.getWriter();
 		Connection c = null;
+		String timeRedirect="0; ";
 		try {
 			// Imposto la connessione.
 	    	DriverManager.registerDriver(new AppEngineDriver());
@@ -50,13 +51,10 @@ public class GuestbookServlet extends HttpServlet{
 	    		int success = 2;
 	    		// Eseguo l'SQL.
 	    		success = stmt.executeUpdate();
-	    		if(success == 1) {
-	    			// L'istruzione e' andata a buon fine.
-	    			out.println("<html><head></head><body>Success! Redirecting in 3 seconds...</body></html>");
-	    		} 
-	    		else if (success == 0) {
+	    		if(success == 0) {
 	    			// L'istruzione non andata a buon fine.
 	    			out.println("<html><head></head><body>Failure! Please try again! Redirecting in 3 seconds...</body></html>");
+	    			timeRedirect="3; ";
 	    		}
 	    	}
 	    } 
@@ -74,8 +72,8 @@ public class GuestbookServlet extends HttpServlet{
 	    }
 	    // Faccio il refresh della pagina.
 	    if(Utility.isStartLocal())
-	    	res.setHeader("Refresh","3; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
+	    	res.setHeader("Refresh",timeRedirect + "url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
 	    else
-	    	res.setHeader("Refresh","3; url=/Tutorial_gae_dm.html");
+	    	res.setHeader("Refresh",timeRedirect + "url=/Tutorial_gae_dm.html");
 	}
 }

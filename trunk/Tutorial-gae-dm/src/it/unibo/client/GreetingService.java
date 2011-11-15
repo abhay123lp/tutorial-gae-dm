@@ -39,6 +39,7 @@ public interface GreetingService extends RemoteService {
 	/**
 	 * Lettura degli attributi del dataset caricato precedentemente.
 	 * @return Attributi del dataset.
+	 * @throws Exception Errore nella lettura degli attributi.
 	 */
 	Vector<Attributo> attributesDataset() throws Exception;
 	
@@ -52,14 +53,16 @@ public interface GreetingService extends RemoteService {
 	 * Esegue la predizione con le Prediction API.
 	 * @param input Query da predire.
 	 * @return Esito della predizione.
+	 * @throws Exception Errore nel caricamento del modello.
 	 */
-	String doPredict(String input);
+	String doPredict(String query) throws Exception;
 	
 	/**
 	 * Esegue il train dei dati.
 	 * @return Esito del train.
+	 * @throws Exception Errore nel caricamento del modello.
 	 */
-	String doTrain();
+	String doTrain() throws Exception;
 
 	/**
 	 * Predizione dell'istanza.
