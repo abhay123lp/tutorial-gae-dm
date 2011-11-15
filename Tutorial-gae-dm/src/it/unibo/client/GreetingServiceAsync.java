@@ -49,7 +49,7 @@ public interface GreetingServiceAsync {
 	 * @param input Query da predire.
 	 * @param callback Esito della predizione.
 	 */
-	void doPredict(String input, AsyncCallback<String> callback);
+	void doPredict(String query, AsyncCallback<String> callback);
 	
 	/**
 	 * Esegue il train dei dati.

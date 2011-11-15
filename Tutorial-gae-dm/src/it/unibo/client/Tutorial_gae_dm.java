@@ -392,6 +392,13 @@ public class Tutorial_gae_dm implements EntryPoint {
 					greetingService.serviceWeka(nameFile, new AsyncCallback<String>() {
 						@Override
 						public void onSuccess(String result) {
+							// Stampare l'albero con l'uso del widget tree. 
+//							vThirdPanel.clear();
+//							String[] tree = result.split("\n");
+//							Tree treeClassifier = new Tree();
+//							for(int i=0;i<tree.length;i++)
+//								treeClassifier.addItem(tree[i]);
+//							vThirdPanel.add(treeClassifier);
 							if (result.contains("\n"))
 								result = result.replaceAll("\n", "<br>");
 							vThirdPanel.clear();
@@ -542,7 +549,13 @@ public class Tutorial_gae_dm implements EntryPoint {
 	 */
 	private void prediction() {
 		// Pannello principale.
-		final HorizontalPanel hMainPanel = new HorizontalPanel();
+		final VerticalPanel vMainPanel = new VerticalPanel();
+		// Pannello dei controlli.
+		final HorizontalPanel hControlPanel = new HorizontalPanel();
+		// Pannello principale relativo al train.
+		final VerticalPanel vTrainMainPanel = new VerticalPanel();
+		// Pannello relativo al train.
+		final HorizontalPanel hTrainPanel = new HorizontalPanel();
 		// Bottone per l'invio delle query.
 		final Button sendQueryButton = new Button("Send");
 		sendQueryButton.setTitle("Send");
@@ -555,12 +568,14 @@ public class Tutorial_gae_dm implements EntryPoint {
 		// Imposto gli stili.
 		sendQueryButton.addStyleName("sendButton");
 		sendTrainButton.addStyleName("sendButton");
-		// Inserisco nel pannello principale i vari elementi.
-		hMainPanel.add(queryField);
-		hMainPanel.add(sendQueryButton);
-		hMainPanel.add(sendTrainButton);
+		// Inserisco nel pannello dei controlli i vari elementi.
+		hControlPanel.add(queryField);
+		hControlPanel.add(sendQueryButton);
+		hControlPanel.add(sendTrainButton);
+		vMainPanel.add(hControlPanel);
+		vMainPanel.add(vTrainMainPanel);
 		// Inserisco nella RootPanel il panello principale. 
-		RootPanel.get("content").add(hMainPanel);
+		RootPanel.get("content").add(vMainPanel);
 		// Faccio il focus
 		queryField.setFocus(true);
 		queryField.selectAll();
@@ -599,41 +614,47 @@ public class Tutorial_gae_dm implements EntryPoint {
 			private void sendQueryToServer() {
 				// First, we validate the input.
 				String textToServer = queryField.getText();
-				final Label textToServerLabel = new Label(textToServer);
-				// Disabilito i bottoni.
-				sendQueryButton.setEnabled(false);
-				sendTrainButton.setEnabled(false);
-				// Richiamo la funzione del server.
-				greetingService.doPredict(textToServer,
-						new AsyncCallback<String>() {
-							public void onFailure(Throwable caught) {
-								// Fallimento.
-								VerticalPanel dialogVPanel = new VerticalPanel();
-								HTML serverResponseLabel = new HTML();
-								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								serverResponseLabel.addStyleName("serverResponseLabelError");
-								serverResponseLabel.setHTML(SERVER_ERROR);
-								dialogVPanel.add(serverResponseLabel);
-								showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
-							}
-
-							public void onSuccess(String result) {
-								// Successo.
-								VerticalPanel dialogVPanel = new VerticalPanel();
-								HTML serverResponseLabel = new HTML();
-								dialogVPanel.add(new HTML("<b>Sending query to the server:</b>"));
-								dialogVPanel.add(textToServerLabel);
-								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								serverResponseLabel.setHTML(result);
-								dialogVPanel.add(serverResponseLabel);
-								showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
-							}
-						});
+				if(textToServer.equals(""))
+					Window.alert("Insert the query");
+				else{
+					final Label textToServerLabel = new Label(textToServer);
+					// Disabilito i bottoni.
+					sendQueryButton.setEnabled(false);
+					sendTrainButton.setEnabled(false);
+					// Richiamo la funzione del server.
+					greetingService.doPredict(textToServer,
+							new AsyncCallback<String>() {
+								public void onFailure(Throwable caught) {
+									// Fallimento.
+									VerticalPanel dialogVPanel = new VerticalPanel();
+									HTML serverResponseLabel = new HTML();
+									dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+									serverResponseLabel.addStyleName("serverResponseLabelError");
+									if(caught.getMessage().startsWith("Internal Error -"))
+										serverResponseLabel.setHTML(caught.getMessage());
+									else
+										serverResponseLabel.setHTML(SERVER_ERROR);
+									dialogVPanel.add(serverResponseLabel);
+									showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
+								}
+	
+								public void onSuccess(String result) {
+									// Successo.
+									VerticalPanel dialogVPanel = new VerticalPanel();
+									HTML serverResponseLabel = new HTML();
+									dialogVPanel.add(new HTML("<b>Sending query to the server:</b>"));
+									dialogVPanel.add(textToServerLabel);
+									dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+									serverResponseLabel.setHTML(result);
+									dialogVPanel.add(serverResponseLabel);
+									showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
+								}
+							});
+				}
 			}
 			
 			// Invio la richiesta di train al server e aspetto la risposta.
 			private void sendTrainRequestToServer() {
-
 				// Disabilito i bottoni.
 				sendQueryButton.setEnabled(false);
 				sendTrainButton.setEnabled(false);
@@ -646,24 +667,74 @@ public class Tutorial_gae_dm implements EntryPoint {
 								HTML serverResponseLabel = new HTML();
 								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
 								serverResponseLabel.addStyleName("serverResponseLabelError");
-								serverResponseLabel.setHTML(SERVER_ERROR);
+								if(caught.getMessage().startsWith("Internal Error -"))
+									serverResponseLabel.setHTML(caught.getMessage());
+								else
+									serverResponseLabel.setHTML(SERVER_ERROR);								
 								dialogVPanel.add(serverResponseLabel);
 								showDialogBox("Remote Procedure Call - Failure",dialogVPanel,closeButton);
 							}
 
 							public void onSuccess(String result) {
 								// Successo.
-								VerticalPanel dialogVPanel = new VerticalPanel();
-								HTML serverResponseLabel = new HTML();
-								dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-								serverResponseLabel.setHTML(result);
-								dialogVPanel.add(serverResponseLabel);
-								showDialogBox("Remote Procedure Call",dialogVPanel,closeButton);
+								VerticalPanel vSxPanel = new VerticalPanel();
+								VerticalPanel vDxPanel = new VerticalPanel();
+								if (result.contains("classificationAccuracy")){
+									vSxPanel.add(new Label("Classification Accuracy"));
+									int min = result.indexOf(":");
+									int max = result.indexOf(",");
+									vDxPanel.add(new Label(result.substring(min+1, max)));
+									result = result.substring(max+1);
+								}
+								if (result.contains("confusionMatrix")){
+									vSxPanel.add(new Label("Confusion Matrix"));
+									int min = result.indexOf(":");
+									int max = result.indexOf("}}");
+									String confusionMatrix = result.substring(min+2, max+1);
+									vDxPanel.add(new Label(confusionMatrix));
+									result = result.substring(max+3);
+								}
+								if (result.contains("confusionMatrixRowTotals")){
+									vSxPanel.add(new Label("Confusion Matrix Row Totals"));
+									int min = result.indexOf(":");
+									int max = result.indexOf("}");
+									vDxPanel.add(new Label(result.substring(min+2, max)));
+									result = result.substring(max+2);
+								}
+								if (result.contains("modelType")){
+									vSxPanel.add(new Label("Model Type"));
+									int min = result.indexOf(":");
+									int max = result.indexOf(",");
+									vDxPanel.add(new Label(result.substring(min+1, max)));
+									result = result.substring(max+1);
+								}
+								if (result.contains("numberInstances")){
+									vSxPanel.add(new Label("Number Instances"));
+									int min = result.indexOf(":");
+									int max = result.indexOf(",");
+									vDxPanel.add(new Label(result.substring(min+1, max)));
+									result = result.substring(max+1);
+								}
+								if (result.contains("numberLabels")){
+									vSxPanel.add(new Label("Number Labels"));
+									int min = result.indexOf(":");
+									int max = result.indexOf("}");
+									vDxPanel.add(new Label(result.substring(min+1, max)));
+								}
+								vTrainMainPanel.clear();
+								hTrainPanel.clear();
+								// Successo. Imposto il terzo pannello con l'albero del dataset.
+								hTrainPanel.add(vSxPanel);
+								hTrainPanel.add(vDxPanel);
+								vTrainMainPanel.add(new HTML("<br><b>Training Model Info:</b>"));
+								vTrainMainPanel.add(hTrainPanel);
+								// Riabilito i pulsanti.
+								sendQueryButton.setEnabled(true);
+								sendTrainButton.setEnabled(true);
 							}
 						});
 			}
 		}
-
 		// Aggiungo l'handler ai bottoni.
 		MyHandler handler = new MyHandler();
 		sendQueryButton.addClickHandler(handler);

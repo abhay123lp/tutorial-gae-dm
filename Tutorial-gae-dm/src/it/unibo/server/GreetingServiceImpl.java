@@ -24,12 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessProtectedResource;
-import com.google.api.client.googleapis.json.GoogleJsonError;
-import com.google.api.client.googleapis.json.GoogleJsonError.ErrorInfo;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.json.JsonHttpParser;
-import com.google.api.client.json.Json;
 import com.google.api.services.prediction.Prediction;
 import com.google.api.services.prediction.model.Input;
 import com.google.api.services.prediction.model.InputInput;
@@ -54,15 +51,20 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	// Tab del client selezionato.
 	private int tabSelected = 0;
 	
+	// Mi dice se e' stato fatto almeno un train.
+	private boolean train = false;
+	
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException{
-    	GoogleAccessProtectedResource accessProtectedResource = OAuth2Native.exchangeCodeForToken(Utility.getTransport(),
-				Utility.getJsonFactory(),
-		        OAuth2ClientCredentials.CLIENT_ID,
-		        OAuth2ClientCredentials.CLIENT_SECRET);
-		prediction = Prediction.builder(Utility.getTransport(), Utility.getJsonFactory())
-    		.setApplicationName("Google-PredictionSample/1.0")
-    		.setHttpRequestInitializer(accessProtectedResource).build();
+		if (OAuth2ClientCredentials.CLIENT_ID != null || OAuth2ClientCredentials.CLIENT_SECRET != null) {
+	    	GoogleAccessProtectedResource accessProtectedResource = OAuth2Native.exchangeCodeForToken(Utility.getTransport(),
+					Utility.getJsonFactory(),
+			        OAuth2ClientCredentials.CLIENT_ID,
+			        OAuth2ClientCredentials.CLIENT_SECRET);
+			prediction = Prediction.builder(Utility.getTransport(), Utility.getJsonFactory())
+	    		.setApplicationName("Google-PredictionSample/1.0")
+	    		.setHttpRequestInitializer(accessProtectedResource).build();
+		}
 	    if(Utility.isStartLocal())
 	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
 	    else
@@ -186,109 +188,66 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
     		return 1;
     }
     
+    // Esegue la predizione sulla query inserita dall'utente.
     @Override
-	public String doPredict(String input) {
-		
-		if (OAuth2ClientCredentials.CLIENT_ID == null || OAuth2ClientCredentials.CLIENT_SECRET == null) {
-	          System.err.println("Please enter your client ID and secret in " + OAuth2ClientCredentials.class);
-		}
-		else{
-			try {
-	        	predict(prediction, "Is this sentence in English?");
-	        	predict(prediction, "Esta frase es en Español?");
-	        	predict(prediction, "Est-ce cette phrase en Français?");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		return "Prediction OK";
+	public String doPredict(String query) throws Exception {
+    	if(prediction == null)
+    		throw new Exception("Internal Error - Access denied. Get authorization!!");
+    	else
+    	{
+    		if(!train)
+    			throw new Exception("Internal Error - Execute train!!");
+    		else{
+		  		// Preparo l'input.
+			    Input input = new Input();
+			    InputInput inputInput = new InputInput();
+			    inputInput.setCsvInstance(Collections.<Object>singletonList(query));
+			    input.setInput(inputInput);
+			    // Eseguo la predizione
+			    Output output = prediction.trainedmodels().predict(Utility.MODEL_ID, input).execute();
+			    return "Predicted language: " + output.getOutputLabel();
+    		}
+    	}
 	}
 
 	@Override
-	public String doTrain() {
-		try {
-			try {
-				if (OAuth2ClientCredentials.CLIENT_ID == null || OAuth2ClientCredentials.CLIENT_SECRET == null) {
-					System.err.println( "Please enter your client ID and secret in " + OAuth2ClientCredentials.class);
-				} else {
-					train(prediction);
+	public String doTrain() throws Exception{
+    	if(prediction == null)
+    		throw new Exception("Internal Error - Access denied. Get authorization!!");
+    	else
+    	{ 
+			// Settaggio del train con le informazioni impostate nell'utility.
+			Training training = new Training();
+			training.setId(Utility.MODEL_ID);
+			training.setStorageDataLocation(Utility.STORAGE_DATA_LOCATION);
+			prediction.trainedmodels().insert(training).execute();
+			JsonHttpParser jsonHttpParser = new JsonHttpParser(Utility.getJsonFactory());
+			
+			int triesCounter = 0;
+			while (triesCounter < 100) {
+				// Se il modello non sara' trovato, verra' generato un errore 404 HttpResponseException.
+				try {
+					HttpResponse response = prediction.trainedmodels().get(Utility.MODEL_ID).executeUnparsed();
+					if (response.getStatusCode() == 200) {
+						training = jsonHttpParser.parse(response, Training.class);
+						train = true;
+						return training.getModelInfo().toString();
+					}
+					response.ignore();
+				} 
+				catch (HttpResponseException e) {
 				}
-				// success!
-				return "Train OK";
-			} catch (HttpResponseException e) {
-				if (!Json.CONTENT_TYPE.equals(e.getResponse().getContentType())) {
-					System.err.println(e.getResponse().parseAsString());
-		        } else {
-		        	GoogleJsonError errorResponse = GoogleJsonError.parse(Utility.getJsonFactory(), e.getResponse());
-		        	System.err.println(errorResponse.code + " Error: " + errorResponse.message);
-		        	for (ErrorInfo error : errorResponse.errors) {
-		        		System.err.println(Utility.getJsonFactory().toString(error));
-		        	}
-		        }
-			}
-	    } catch (Throwable t) {
-	    	t.printStackTrace();
-	    }
-	    // Fallimento train
-	    return "Train KO";
+	
+				try {
+					// Aspetto 5 secondi, poi riprovo.
+					Thread.sleep(5000);
+				} 
+				catch (InterruptedException e) {
+					break;
+				}
+				triesCounter++;
+		    }
+		    throw new Exception("Internal Error - Training not completed.");
+    	}
 	}
-
-	private static void train(Prediction prediction) throws IOException {
-		Training training = new Training();
-		training.setId(Utility.MODEL_ID);
-		training.setStorageDataLocation(Utility.STORAGE_DATA_LOCATION);
-		prediction.trainedmodels().insert(training).execute();
-		System.out.println("Training started.");
-		System.out.print("Waiting for training to complete");
-		System.out.flush();
-
-		JsonHttpParser jsonHttpParser = new JsonHttpParser(Utility.getJsonFactory());
-		int triesCounter = 0;
-		while (triesCounter < 100) {
-			// NOTE: if model not found, it will throw an HttpResponseException with a 404 error
-			try {
-				HttpResponse response = prediction.trainedmodels().get(Utility.MODEL_ID).executeUnparsed();
-				if (response.getStatusCode() == 200) {
-					training = jsonHttpParser.parse(response, Training.class);
-					System.out.println();
-					System.out.println("Training completed.");
-					System.out.println(training.getModelInfo());
-					return;
-				}
-				response.ignore();
-			} 
-			catch (HttpResponseException e) {
-			}
-
-			try {
-				// 5 seconds times the tries counter
-				Thread.sleep(5000 * (triesCounter + 1));
-			} 
-			catch (InterruptedException e) {
-				break;
-			}
-			System.out.print(".");
-			System.out.flush();
-			triesCounter++;
-	    }
-	    error("ERROR: training not completed.");
-  	}
-
-  	private static void error(String errorMessage) {
-  		System.err.println();
-  		System.err.println(errorMessage);
-	  	System.exit(1);
-  	}
-
-  	private static void predict(Prediction prediction, String text) throws IOException {
-	    Input input = new Input();
-	    InputInput inputInput = new InputInput();
-	    inputInput.setCsvInstance(Collections.<Object>singletonList(text));
-	    input.setInput(inputInput);
-	    Output output = prediction.trainedmodels().predict(Utility.MODEL_ID, input).execute();
-	    System.out.println("Text: " + text);
-	    System.out.println("Predicted language: " + output.getOutputLabel());
-  	}
-
 }

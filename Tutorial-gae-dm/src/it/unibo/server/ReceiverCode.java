@@ -23,8 +23,6 @@ public class ReceiverCode extends RemoteServiceServlet{
       	String error = req.getParameter("error");
       	if (error != null) {
       		// L'utente non ha cosentito.
-      		System.out.println("Authorization failed. Error=" + error);
-      		System.out.println("Quitting.");
     	    if(Utility.isStartLocal())
     	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
     	    else
