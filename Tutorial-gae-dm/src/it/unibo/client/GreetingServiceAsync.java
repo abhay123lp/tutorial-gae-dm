@@ -63,15 +63,4 @@ public interface GreetingServiceAsync {
 	 * @param callback Predizione.
 	 */
 	void classifyMessage(String instance, AsyncCallback<String> callback);
-
-	/**
-	 * @param callback Tab del cliente selezionato.
-	 */
-	void tabSelected(AsyncCallback<Integer> callback);
-
-	/**
-	 * @param tab Tab selezionato.
-	 * @param callback Void.
-	 */
-	void updateTabSelected(int tab, AsyncCallback<Void> callback);
 }
