@@ -12,7 +12,7 @@ import com.google.api.client.json.jackson.JacksonFactory;
  */
 public class Utility {
 	// Mi dice se l'applicazione gira in locale o meno.
-	static boolean START_LOCALE = true;
+	static boolean START_LOCALE = false;
 	
 	// Utili per le richieste delle API.
 	private static final HttpTransport TRANSPORT = new UrlFetchTransport();
@@ -21,7 +21,7 @@ public class Utility {
 	// OAuth 2 scope.
 	public static final String SCOPE = "https://www.googleapis.com/auth/prediction";
 	// Locazioni del bucket nello storage. 
-	public static final String STORAGE_DATA_LOCATION = "fabiohelloprediction/language_id.txt";
+	public static final String STORAGE_DATA_LOCATION = "grahelloprediction/language_id.txt";
 	//public static final String STORAGE_DATA_LOCATION = "fabiohelloprediction/ua.user.405.cvs";
 	// Nome del modello creato dopo aver fatto il train.
 	public static final String MODEL_ID = "language_prediction_model";

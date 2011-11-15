@@ -17,6 +17,7 @@ import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -61,22 +62,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    widget.addSelectionHandler(new SelectionHandler<Integer>() {
 	        public void onSelection(SelectionEvent<Integer> event) {
 	    	    // Aggiorno il tab selezionato
-	    	    greetingService.updateTabSelected(event.getSelectedItem().intValue(), new AsyncCallback<Void>() {
-					@Override
-					public void onSuccess(Void result) {
-					}
-					@Override
-					public void onFailure(Throwable caught) {
-						// Fallimento.
-						VerticalPanel dialogVPanel = new VerticalPanel();
-						HTML serverResponseLabel = new HTML();
-						dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-						serverResponseLabel.addStyleName("serverResponseLabelError");
-						serverResponseLabel.setHTML(SERVER_ERROR);
-						dialogVPanel.add(serverResponseLabel);
-						showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
-					}
-				});
+	        	Cookies.setCookie("cookieTab", String.valueOf(event.getSelectedItem().intValue()));
 	            // A seconda di cosa e' stato selezionato, visualizzo il tutorial.
 	        	if(event.getSelectedItem().intValue() == 0)
 	        		Cloud();
@@ -103,23 +89,12 @@ public class Tutorial_gae_dm implements EntryPoint {
 	    });
 	    // Seleziono il primo Tab perche' cosi' inizializzo la pagina con il contenuto per il
 	    // tutorial Google Cloud SQL.
-	    greetingService.tabSelected(new AsyncCallback<Integer>() {
-			@Override
-			public void onSuccess(Integer result) {
-				widget.selectTab(result);
-			}
-			@Override
-			public void onFailure(Throwable caught) {
-				// Fallimento.
-				VerticalPanel dialogVPanel = new VerticalPanel();
-				HTML serverResponseLabel = new HTML();
-				dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-				serverResponseLabel.addStyleName("serverResponseLabelError");
-				serverResponseLabel.setHTML(SERVER_ERROR);
-				dialogVPanel.add(serverResponseLabel);
-				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
-			}
-		});
+	    String tab = Cookies.getCookie("cookieTab");
+	    if(tab!=null){
+	    	widget.selectTab(Integer.parseInt(tab));
+	    }
+	    else
+	    	widget.selectTab(0);
 	    RootPanel.get("tab").add(widget);
 	}
 	

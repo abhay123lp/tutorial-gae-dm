@@ -48,9 +48,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	// Modello di weka.
 	private ModelWeka model = null;
 	
-	// Tab del client selezionato.
-	private int tabSelected = 0;
-	
 	// Mi dice se e' stato fatto almeno un train.
 	private boolean train = false;
 	
@@ -62,13 +59,14 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 			        OAuth2ClientCredentials.CLIENT_ID,
 			        OAuth2ClientCredentials.CLIENT_SECRET);
 			prediction = Prediction.builder(Utility.getTransport(), Utility.getJsonFactory())
-	    		.setApplicationName("Google-PredictionSample/1.0")
+	    		.setApplicationName("Google-PredictionSample/1.0")	    	
 	    		.setHttpRequestInitializer(accessProtectedResource).build();
 		}
 	    if(Utility.isStartLocal())
 	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html?gwt.codesvr=127.0.0.1:9997");
 	    else
 	    	res.setHeader("Refresh","0; url=/Tutorial_gae_dm.html");
+	    
     }
 
     // Legge i dati della guestbook per il tutorial Google Cloud SQL.
@@ -166,18 +164,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	    // Ritorno la lista.
 		return listDataset;
 	}
-	
-	// Mi dice quale tab e' selezionato
-    @Override
-    public int tabSelected(){
-    	return tabSelected;
-    }
-    
-	// Mi dice quale tab e' selezionato
-    @Override
-    public void updateTabSelected(int tab){
-    	tabSelected = tab;
-    }
 
     // Mi dice se devono essere chieste le autorizzazioni o meno per il tutorial sulle Prediction API.
     @Override

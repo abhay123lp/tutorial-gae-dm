@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAuthorizationRequestUrl;
+import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**

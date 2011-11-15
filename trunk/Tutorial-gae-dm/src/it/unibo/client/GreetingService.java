@@ -72,13 +72,4 @@ public interface GreetingService extends RemoteService {
 	 */
 	String classifyMessage(String instance) throws Exception;
 
-	/**
-	 * @return Tab del cliente selezionato.
-	 */
-	int tabSelected();
-
-	/**
-	 * @param tab Tab selezionato.
-	 */
-	void updateTabSelected(int tab);
 }

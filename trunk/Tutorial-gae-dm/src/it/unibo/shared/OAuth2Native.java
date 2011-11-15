@@ -16,7 +16,6 @@ package it.unibo.shared;
 
 import java.io.IOException;
 
-import com.google.api.client.auth.oauth2.draft10.AccessTokenErrorResponse;
 import com.google.api.client.auth.oauth2.draft10.AccessTokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessProtectedResource;
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessTokenRequest.GoogleAuthorizationCodeGrant;
@@ -110,8 +109,6 @@ public class OAuth2Native {
 				redirectUrl).execute();
   		} 
   		catch (HttpResponseException e) {
-  			AccessTokenErrorResponse response = e.getResponse().parseAs(AccessTokenErrorResponse.class);
-  			System.out.println("Error: " + response.error);
   			return null;
   		}
   }
