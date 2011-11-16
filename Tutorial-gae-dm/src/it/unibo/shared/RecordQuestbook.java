@@ -13,7 +13,7 @@ public class RecordQuestbook implements Serializable {
 	// Identificativo del record.
 	private String entryID;
 	// Nome dell'utente.
-	private String guestName;
+	private String nationality;
 	// Messaggio dell'utente.
 	private String content;
 	
@@ -27,10 +27,10 @@ public class RecordQuestbook implements Serializable {
 	 * @param guestName Nome dell'utente.
 	 * @param content Messaggio dell'utente.
 	 */ 
-	public RecordQuestbook(String entryID, String guestName, String content) {
+	public RecordQuestbook(String entryID, String nationality, String content) {
 		super();
 		this.entryID = entryID;
-		this.guestName = guestName;
+		this.nationality = nationality;
 		this.content = content;
 	}
 
@@ -51,15 +51,15 @@ public class RecordQuestbook implements Serializable {
 	/**
 	 * @return Nome dell'utente.
 	 */
-	public String getGuestName() {
-		return guestName;
+	public String getNationality() {
+		return nationality;
 	}
 
 	/**
 	 * @param guestName Nome dell'utente.
 	 */
-	public void setGuestName(String guestName) {
-		this.guestName = guestName;
+	public void setNationality(String nationality) {
+		this.nationality = nationality;
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class RecordQuestbook implements Serializable {
 		if(i==0)
 			return entryID;
 		else if(i==1)
-			return guestName;
+			return nationality;
 		else
 			return content;
 	}

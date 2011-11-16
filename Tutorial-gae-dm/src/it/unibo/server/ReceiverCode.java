@@ -33,7 +33,7 @@ public class ReceiverCode extends RemoteServiceServlet{
 	      	code = req.getParameter("code");
 	      	OAuth2Native.setCode(code);
 	      	// Refresh della pagina.
-	      	res.setHeader("Refresh", "0; url=/tutorial_gae_dm/greet");
+	      	res.setHeader("Refresh", "0; url=/createPredict");
       	}
 	}
 }

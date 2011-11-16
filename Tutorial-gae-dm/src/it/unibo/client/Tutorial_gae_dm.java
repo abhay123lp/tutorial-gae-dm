@@ -27,6 +27,7 @@ import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -51,6 +52,8 @@ public class Tutorial_gae_dm implements EntryPoint {
 
 	// Per i messaggio di errore o per quelli ricevuti dal server faccio vedere la DialogBox.
 	private final DialogBox dialogBox = new DialogBox();
+	
+	private static final Image image = new Image("loader.gif");
 	
 	// Metodo dell'entry point.
 	public void onModuleLoad() {
@@ -118,12 +121,15 @@ public class Tutorial_gae_dm implements EntryPoint {
 		formGuest.setMethod(FormPanel.METHOD_POST);
 		formGuest.setAction("/sendGuestbook");
 
+		// Pulisco il contenuto della pagina HTML.
+		RootPanel.get("content").clear();
+		
+		RootPanel.get("content").add(image);
+		
 		// E' stato premuto il bottone per vedere il tutorial di "Google Cloud SQL".
 		greetingService.dataCloud(new AsyncCallback<Vector<RecordQuestbook>>() {
 			@Override
 			public void onSuccess(Vector<RecordQuestbook> result) {
-				// Pulisco il contenuto della pagina HTML.
-				RootPanel.get("content").clear();
 				if(result.size()>0)
 				{
 					int numFields = result.get(0).getNumFields();
@@ -138,10 +144,14 @@ public class Tutorial_gae_dm implements EntryPoint {
 				else
 					vSxPanel.add(new Label("No message!!"));
 				// Costruzione della form per l'invio dei messaggio sul guestbook.
-				vFormPanel.add(new Label("First Name: "));
-				final TextBox guestName = new TextBox();
-				guestName.setName("guestName");
-				vFormPanel.add(guestName);
+				vFormPanel.add(new Label("Nationality: "));
+				final ListBox nationality = new ListBox();
+				nationality.addItem("Italian");
+				nationality.addItem("English");
+				nationality.addItem("French");
+				nationality.addItem("Spanish");
+				vFormPanel.add(nationality);
+				nationality.setName("nationality");
 				vFormPanel.add(new Label("Message: "));
 				final TextArea content = new TextArea();
 				content.setName("content");
@@ -152,8 +162,8 @@ public class Tutorial_gae_dm implements EntryPoint {
 				sendGuest.addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent event) {
-						if(content.getText().equals("") || guestName.getText().equals(""))
-							Window.alert("Insert the fields.");
+						if(content.getText().equals(""))
+							Window.alert("Insert the field.");
 						else
 							formGuest.submit();
 					}
@@ -164,6 +174,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 				hMainPanel.add(vSxPanel);
 				// Aggiungo nella parte destra una form.
 				hMainPanel.add(formGuest);
+				RootPanel.get("content").clear();
 				RootPanel.get("content").add(hMainPanel);
 			}
 			
@@ -225,6 +236,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 		
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
+		RootPanel.get("content").add(image);
 		
 		final Button closeButton = new Button("Close");
 		// Quando viene cliccato il bottone di chiusura del popup, riabilito gli altri bottoni.
@@ -336,6 +348,8 @@ public class Tutorial_gae_dm implements EntryPoint {
 				// Aggiungo nel secondo panello, la tabella.
 				vSecondPanel.add(listDataset);
 				vSecondPanel.add(useDataset);
+				RootPanel.get("content").clear();
+				RootPanel.get("content").add(hMainPanel);
 			}
 			
 			@Override
@@ -360,20 +374,15 @@ public class Tutorial_gae_dm implements EntryPoint {
 					// Non c'e' neanche un RadioButton selezionato.
 					Window.alert("Select one file!");
 				else{
+					hMainDatasetPanel.clear();
+					hMainDatasetPanel.add(image);
 					useDataset.setEnabled(false);
 					loadDataset.setEnabled(false);
 					predictInstance.setEnabled(false);
-					// C'e' almeno un RadioButton selezionato.
+					// C'e' almeno un file selezionato.
 					greetingService.serviceWeka(nameFile, new AsyncCallback<String>() {
 						@Override
 						public void onSuccess(String result) {
-							// Stampare l'albero con l'uso del widget tree. 
-//							vThirdPanel.clear();
-//							String[] tree = result.split("\n");
-//							Tree treeClassifier = new Tree();
-//							for(int i=0;i<tree.length;i++)
-//								treeClassifier.addItem(tree[i]);
-//							vThirdPanel.add(treeClassifier);
 							if (result.contains("\n"))
 								result = result.replaceAll("\n", "<br>");
 							vThirdPanel.clear();
@@ -418,6 +427,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 									vPredictPanel.add(vPredictAttributePanel);
 									vFourthPanel.add(new HTML("<br><b>Predict sentence:</b>"));
 									vFourthPanel.add(vPredictPanel);
+									hMainDatasetPanel.clear();
+									hMainDatasetPanel.add(vThirdPanel);
+									hMainDatasetPanel.add(vFourthPanel);
+									hMainPanel.add(hMainDatasetPanel);
 									// Riabilito i pulsanti.
 									useDataset.setEnabled(true);
 									loadDataset.setEnabled(true);
@@ -462,10 +475,6 @@ public class Tutorial_gae_dm implements EntryPoint {
 		hMainControlPanel.add(vFirstPanel);
 		hMainControlPanel.add(vSecondPanel);
 		hMainPanel.add(hMainControlPanel);
-		hMainDatasetPanel.add(vThirdPanel);
-		hMainDatasetPanel.add(vFourthPanel);
-		hMainPanel.add(hMainDatasetPanel);
-		RootPanel.get("content").add(hMainPanel);
 	}
 	
 	/**
@@ -474,13 +483,14 @@ public class Tutorial_gae_dm implements EntryPoint {
 	private void Prediction(){
 		// Pulisco il contenuto della pagina HTML.
 		RootPanel.get("content").clear();
+		RootPanel.get("content").add(image);
 		greetingService.authorization(new AsyncCallback<Integer>() {
 			@Override
 			public void onSuccess(Integer result) {
 				if(result==0)
 					authorization();
-				else
-					prediction();
+				else if(result==1)
+					predictionAPI();
 			}
 			@Override
 			public void onFailure(Throwable caught) {
@@ -516,13 +526,15 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 		});
 		formPredict.add(sendAuthorization);
+		
+		RootPanel.get("content").clear();
 		RootPanel.get("content").add(formPredict);
 	}
 	
-	/**
+   /**
 	 * Uso delle Prediction API.
 	 */
-	private void prediction() {
+	private void predictionAPI() {
 		// Pannello principale.
 		final VerticalPanel vMainPanel = new VerticalPanel();
 		// Pannello dei controlli.
@@ -549,8 +561,6 @@ public class Tutorial_gae_dm implements EntryPoint {
 		hControlPanel.add(sendTrainButton);
 		vMainPanel.add(hControlPanel);
 		vMainPanel.add(vTrainMainPanel);
-		// Inserisco nella RootPanel il panello principale. 
-		RootPanel.get("content").add(vMainPanel);
 		// Faccio il focus
 		queryField.setFocus(true);
 		queryField.selectAll();
@@ -566,6 +576,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 				sendQueryButton.setFocus(true);
 			}
 		});
+
+		RootPanel.get("content").clear();
+		// Inserisco nella RootPanel il panello principale. 
+		RootPanel.get("content").add(vMainPanel);
 
 		// Handler che gestisce i bottoni di invio della query e del train.
 		class MyHandler implements ClickHandler, KeyUpHandler {
@@ -716,7 +730,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 		sendTrainButton.addClickHandler(handler);
 		queryField.addKeyUpHandler(handler);
 	}
-	
+
 	/**
 	 * Visualizzazione di un DialogBox
 	 * @param titleBox Titolo del DialogBox.
