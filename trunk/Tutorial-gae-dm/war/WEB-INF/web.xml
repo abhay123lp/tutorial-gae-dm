@@ -31,6 +31,16 @@
     <servlet-class>it.unibo.server.ReceiverCode</servlet-class>
   </servlet>
   
+  <servlet>
+    <servlet-name>createPredict</servlet-name>
+    <servlet-class>it.unibo.server.CreatePredict</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>createPredict</servlet-name>
+    <url-pattern>/createPredict</url-pattern>
+  </servlet-mapping>
+  
   <servlet-mapping>
     <servlet-name>receiverCode</servlet-name>
     <url-pattern>/receiverCode</url-pattern>

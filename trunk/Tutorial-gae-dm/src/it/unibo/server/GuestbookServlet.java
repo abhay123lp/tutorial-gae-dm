@@ -30,20 +30,20 @@ public class GuestbookServlet extends HttpServlet{
 	    	DriverManager.registerDriver(new AppEngineDriver());
 	    	if(Utility.isStartLocal())
 		    	// Connessione locale.
-		    	c = DriverManager.getConnection("jdbc:google:rdbms://localhost:3306/guestbook","root","fabio.magnani3");
+		    	c = DriverManager.getConnection("jdbc:google:rdbms://localhost:3306/prediction","root","fabio.magnani3");
 	    	else
 	    		// Connessione remoto.
-	    		c = DriverManager.getConnection("jdbc:google:rdbms://tutorial-id:firstinstance/guestbook");
+	    		c = DriverManager.getConnection("jdbc:google:rdbms://tutorial-id:firstinstance/prediction");
 	    	// Recupero i parametri della form.
 	    	req.getParameterNames();
-	    	String guestName = req.getParameter("guestName");
+	    	String guestName = req.getParameter("nationality");
 	    	String content = req.getParameter("content");
 	    	if (guestName == "" || content == "") {
 	    		out.println("<html><head></head><body>You are missing either a message or a name! Try again! Redirecting in 3 seconds...</body></html>");
 	    	}
 	    	else {
 	    		// Preparo l'istruzione SQL da eseguire.
-	    		String statement ="INSERT INTO entries (guestName, content) VALUES( ? , ? )";
+	    		String statement ="INSERT INTO entries (nationality, content) VALUES( ? , ? )";
 	    		PreparedStatement stmt = c.prepareStatement(statement);
 	    		// Setto i parametri della form nell'istruzione SQL.
 	    		stmt.setString(1, guestName);

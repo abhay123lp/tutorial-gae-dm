@@ -133,13 +133,12 @@ public class ModelWeka extends RemoteServiceServlet {
 					m_Data.setClassIndex(m_Data.numAttributes() - 1);
 					// Costruisco il classificatore.
 					m_Classifier.buildClassifier(m_Data);
-					
 					// Chiudo gli elementi utilizzati.
 					b.close();
 					is.close();
 					
 					// Ritorno l'albero generato dal classificatore.
-					return m_Classifier.toString();
+					return m_Classifier.toString();					
 				}
 				throw new Exception("Internal Error - I found more file .arff");
 			}
