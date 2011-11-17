@@ -24,9 +24,7 @@ public class Utility {
   
 	// OAuth 2 scope.
 	public static final String SCOPE = "https://www.googleapis.com/auth/prediction";
-	// Locazioni del bucket nello storage. 
-	public static final String STORAGE_DATA_LOCATION = "fabiohelloprediction/testLanguage.txt";
-	//public static final String STORAGE_DATA_LOCATION = "fabiohelloprediction/ua.user.405.cvs";
+	
 	// Nome del modello creato dopo aver fatto il train.
 	public static final String MODEL_ID = "language_prediction";
 	
@@ -36,6 +34,10 @@ public class Utility {
 	public static final String GOOGLE_ACCESS_KEYS = "GOOGNQVY66JXAQEQOOSK";
 	// Bucket del Google Cloud Storage
 	public static final String BUCKET = "fabiohelloprediction";
+	// Nome File per le predizioni.
+	public static final String FILE_PREDICT = "DataPrediction.txt";
+	// Locazioni del bucket nello storage. 
+	public static final String STORAGE_DATA_LOCATION = BUCKET + "/" + FILE_PREDICT;
 
 	/**
 	 * Serve per capire se l'applicazione gira in locale.

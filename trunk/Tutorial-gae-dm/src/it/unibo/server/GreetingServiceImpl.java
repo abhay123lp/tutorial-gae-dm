@@ -287,7 +287,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
         setting.setGoogleAccessId(Utility.GOOGLE_ACCESS_KEYS);
         setting.setBucket(Utility.BUCKET);
         setting.setAcl(acl);
-        setting.setNameFile("DataPrediction.txt");
+        setting.setNameFile(Utility.FILE_PREDICT);
         setting.setContentType(contentType);
         return setting;
 	}
