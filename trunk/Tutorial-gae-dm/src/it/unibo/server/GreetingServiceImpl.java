@@ -5,19 +5,31 @@ import it.unibo.shared.Attributo;
 import it.unibo.shared.DownloadableFile;
 import it.unibo.shared.PMF;
 import it.unibo.shared.RecordQuestbook;
+import it.unibo.shared.UploadFileBucket;
 import it.unibo.shared.Utility;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.Vector;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
+import com.google.api.client.auth.oauth.OAuthParameters;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.json.JsonHttpParser;
@@ -26,6 +38,7 @@ import com.google.api.services.prediction.model.InputInput;
 import com.google.api.services.prediction.model.Output;
 import com.google.api.services.prediction.model.Training;
 import com.google.appengine.api.rdbms.AppEngineDriver;
+import com.google.appengine.repackaged.com.google.common.util.Base64;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -169,6 +182,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
     	}
 	}
 
+    // Faccio il train del modello.
 	@Override
 	public String doTrain() throws Exception{
     	if(Utility.getPrediction() == null)
@@ -208,5 +222,73 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		    }
 		    throw new Exception("Internal Error - Training not completed.");
     	}
+	}
+	
+	// Prepara i settaggi per fare l'upload di un file nel Google Cloud Storage.
+	@Override
+	public UploadFileBucket uploadDataPredict() throws Exception{
+		UploadFileBucket setting = new UploadFileBucket();
+		String acl = "private";
+		String contentType = "application/txt";
+		// Calcolo la data
+        GregorianCalendar gc = new GregorianCalendar();
+        gc.add(Calendar.MINUTE, 20);
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String expiration = df.format(gc.getTime());
+
+        // Preparo il documento policy.
+        String policyDocument = "";
+        StringBuilder buf = new StringBuilder();
+        buf.append("{\"expiration\": \"");
+        buf.append(expiration);
+        buf.append("\"");
+        buf.append(",\"conditions\": [");
+        buf.append(",{\"acl\": \"");
+        buf.append(acl);
+        buf.append("\"}");        
+        buf.append("[\"starts-with\", \"$key\", \"\"],");
+        buf.append("[\"eq\", \"$Content-Type\", \"" + contentType + "\"]");
+        buf.append("]}");
+        policyDocument = Base64.encode(buf.toString().replaceAll("\n", "").getBytes());
+        
+		// Prendo i dati da Google Cloud SQL.
+		Vector<RecordQuestbook> dataPredict = dataCloud();
+		// Metto tutti i dati in una stringa.
+		String strDataPredict = "";
+		RecordQuestbook temp;
+		for(int i=0;i<dataPredict.size();i++){
+			temp = dataPredict.get(i);
+			strDataPredict = strDataPredict.concat("\"" + temp.getNationality() + "\",\""+ temp.getContent() +"\"\n");
+		}
+		
+		// Preparo la signature.
+		String signature = "";
+        try {
+        	String secret = OAuthParameters.escape(Utility.LEGACY_STORAGE_ACCESS_KEYS);
+            Mac mac = Mac.getInstance("HmacSHA1");
+            byte[] secretBytes = secret.getBytes("UTF8");
+            SecretKeySpec signingKey = new SecretKeySpec(secretBytes, "HmacSHA1");
+            mac.init(signingKey);
+            byte[] signedSecretBytes = mac.doFinal(policyDocument.getBytes("UTF8"));
+            signature = Base64.encode(signedSecretBytes);
+        } catch (InvalidKeyException e) {
+        	throw new Exception("Internal Error - Invalid Key for signature.");
+        } catch (NoSuchAlgorithmException e) {
+        	throw new Exception("Internal Error - No such Algorithm.");
+        } catch (UnsupportedEncodingException e) {
+        	throw new Exception("Internal Error - Unsupported Encoding.");
+        }
+        
+        // Setto gli elementi appena creati.
+        setting.setPolicy(policyDocument);
+        setting.setContentFile(strDataPredict);
+        setting.setSignature(signature);
+        setting.setGoogleAccessId(Utility.GOOGLE_ACCESS_KEYS);
+        setting.setBucket(Utility.BUCKET);
+        setting.setAcl(acl);
+        setting.setNameFile("DataPrediction.txt");
+        setting.setContentType(contentType);
+        return setting;
 	}
 }

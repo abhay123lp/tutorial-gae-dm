@@ -3,6 +3,7 @@ package it.unibo.client;
 
 import it.unibo.shared.Attributo;
 import it.unibo.shared.RecordQuestbook;
+import it.unibo.shared.UploadFileBucket;
 
 import java.util.Vector;
 
@@ -63,4 +64,9 @@ public interface GreetingServiceAsync {
 	 * @param callback Predizione.
 	 */
 	void classifyMessage(String instance, AsyncCallback<String> callback);
+	
+	/**
+	 * @param callback Caratteritiche per fare l'upload.
+	 */
+	void uploadDataPredict(AsyncCallback<UploadFileBucket> callback);
 }

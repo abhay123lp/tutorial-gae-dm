@@ -30,6 +30,13 @@ public class Utility {
 	// Nome del modello creato dopo aver fatto il train.
 	public static final String MODEL_ID = "language_prediction";
 	
+	// Legacy Storage Access Keys.
+	public static final String LEGACY_STORAGE_ACCESS_KEYS = "pY3Jk8WoXaVCmxStQluBGsHHFZH5jGlYmOn2Ib80";
+	// Google Access Key
+	public static final String GOOGLE_ACCESS_KEYS = "GOOGNQVY66JXAQEQOOSK";
+	// Bucket del Google Cloud Storage
+	public static final String BUCKET = "fabiohelloprediction";
+
 	/**
 	 * Serve per capire se l'applicazione gira in locale.
 	 * @return True, se l'applicazione gira in locale, False altrimenti.
