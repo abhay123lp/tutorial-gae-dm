@@ -3,6 +3,7 @@ package it.unibo.client;
 
 import it.unibo.shared.Attributo;
 import it.unibo.shared.RecordQuestbook;
+import it.unibo.shared.UploadFileBucket;
 
 import java.util.Vector;
 
@@ -26,6 +27,7 @@ import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
@@ -526,7 +528,6 @@ public class Tutorial_gae_dm implements EntryPoint {
 			}
 		});
 		formPredict.add(sendAuthorization);
-		
 		RootPanel.get("content").clear();
 		RootPanel.get("content").add(formPredict);
 	}
@@ -535,6 +536,10 @@ public class Tutorial_gae_dm implements EntryPoint {
 	 * Uso delle Prediction API.
 	 */
 	private void predictionAPI() {
+		RootPanel.get("content").clear();
+		// Inserisco nella RootPanel il panello principale. 
+		RootPanel.get("content").add(image);
+		
 		// Pannello principale.
 		final VerticalPanel vMainPanel = new VerticalPanel();
 		// Pannello dei controlli.
@@ -552,13 +557,64 @@ public class Tutorial_gae_dm implements EntryPoint {
 		// TextBox dove e' possibile inserire la query da inviare al server.
 		final TextBox queryField = new TextBox();
 		queryField.setText("query");
+		// Form per le autorizzazioni per usare la api.		
+		final FormPanel formPredict = new FormPanel("");
+		
+	    greetingService.uploadDataPredict(new AsyncCallback<UploadFileBucket>() {
+			@Override
+			public void onSuccess(UploadFileBucket result) {
+				// Setto le proprieta' della form.
+				formPredict.setEncoding(FormPanel.ENCODING_MULTIPART);
+				formPredict.setMethod(FormPanel.METHOD_POST);
+				formPredict.setAction("http://commondatastorage.googleapis.com/" + result.getBucket());
+				
+				final VerticalPanel vPredictPanel = new VerticalPanel();
+				Hidden bucket = new Hidden("bucket",result.getBucket());
+				Hidden googleAccessId = new Hidden("GoogleAccessId",result.getGoogleAccessId());
+				Hidden acl = new Hidden("acl",result.getAcl());
+				Hidden contentType = new Hidden("Content-Type",result.getContentType());
+				Hidden policy = new Hidden("policy",result.getPolicy());
+				Hidden signature = new Hidden("signature",result.getSignature());
+				Hidden key = new Hidden("key",result.getNameFile());
+				Hidden file = new Hidden("file",result.getContentFile());
+				vPredictPanel.add(bucket);
+				vPredictPanel.add(googleAccessId);
+				vPredictPanel.add(acl);
+				vPredictPanel.add(contentType);
+				vPredictPanel.add(policy);
+				vPredictPanel.add(signature);
+				vPredictPanel.add(key);
+				vPredictPanel.add(file);
+				vPredictPanel.add(sendTrainButton);
+				formPredict.add(vPredictPanel);
+				
+				RootPanel.get("content").clear();
+				// Inserisco nella RootPanel il panello principale. 
+				RootPanel.get("content").add(vMainPanel);
+			}
+			
+			@Override
+			public void onFailure(Throwable caught) {
+				// Fallimento.
+				VerticalPanel dialogVPanel = new VerticalPanel();
+				HTML serverResponseLabel = new HTML();
+				dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+				serverResponseLabel.addStyleName("serverResponseLabelError");
+				if(caught.getMessage().startsWith("Internal Error -"))
+					serverResponseLabel.setHTML(caught.getMessage());
+				else
+					serverResponseLabel.setHTML(SERVER_ERROR);								
+				dialogVPanel.add(serverResponseLabel);
+				showDialogBox("Remote Procedure Call - Failure",dialogVPanel,null);
+			}
+		});		
 		// Imposto gli stili.
 		sendQueryButton.addStyleName("sendButton");
 		sendTrainButton.addStyleName("sendButton");
 		// Inserisco nel pannello dei controlli i vari elementi.
 		hControlPanel.add(queryField);
 		hControlPanel.add(sendQueryButton);
-		hControlPanel.add(sendTrainButton);
+		hControlPanel.add(formPredict);
 		vMainPanel.add(hControlPanel);
 		vMainPanel.add(vTrainMainPanel);
 		// Faccio il focus
@@ -576,10 +632,6 @@ public class Tutorial_gae_dm implements EntryPoint {
 				sendQueryButton.setFocus(true);
 			}
 		});
-
-		RootPanel.get("content").clear();
-		// Inserisco nella RootPanel il panello principale. 
-		RootPanel.get("content").add(vMainPanel);
 
 		// Handler che gestisce i bottoni di invio della query e del train.
 		class MyHandler implements ClickHandler, KeyUpHandler {
@@ -644,6 +696,7 @@ public class Tutorial_gae_dm implements EntryPoint {
 			
 			// Invio la richiesta di train al server e aspetto la risposta.
 			private void sendTrainRequestToServer() {
+				formPredict.submit();
 				// Disabilito i bottoni.
 				sendQueryButton.setEnabled(false);
 				sendTrainButton.setEnabled(false);
@@ -769,3 +822,4 @@ public class Tutorial_gae_dm implements EntryPoint {
 		
 	}
 }
+

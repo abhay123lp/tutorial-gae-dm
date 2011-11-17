@@ -3,6 +3,7 @@ package it.unibo.client;
 
 import it.unibo.shared.Attributo;
 import it.unibo.shared.RecordQuestbook;
+import it.unibo.shared.UploadFileBucket;
 
 import java.util.Vector;
 
@@ -71,5 +72,10 @@ public interface GreetingService extends RemoteService {
 	 * @throws Exception Modello non caricato o istanza non corretta.
 	 */
 	String classifyMessage(String instance) throws Exception;
+
+	/**
+	 * @return Caratteritiche per fare l'upload.
+	 */
+	UploadFileBucket uploadDataPredict() throws Exception;
 
 }
