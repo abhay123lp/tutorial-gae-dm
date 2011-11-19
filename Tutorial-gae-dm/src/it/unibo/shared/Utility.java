@@ -13,7 +13,7 @@ import com.google.api.services.prediction.Prediction;
  */
 public class Utility {
 	// Mi dice se l'applicazione gira in locale o meno.
-	private static final boolean START_LOCALE = true;
+	private static final boolean START_LOCALE = false;
 
 	// Elemento usato nelle Prediction API.
 	private static Prediction prediction = null;
@@ -26,7 +26,7 @@ public class Utility {
 	public static final String SCOPE = "https://www.googleapis.com/auth/prediction";
 	
 	// Nome del modello creato dopo aver fatto il train.
-	public static final String MODEL_ID = "language_prediction";
+	public static final String MODEL_ID = "language_prediction_model";
 	
 	// Legacy Storage Access Keys.
 	public static final String LEGACY_STORAGE_ACCESS_KEYS = "pY3Jk8WoXaVCmxStQluBGsHHFZH5jGlYmOn2Ib80";
@@ -35,7 +35,7 @@ public class Utility {
 	// Bucket del Google Cloud Storage
 	public static final String BUCKET = "fabiohelloprediction";
 	// Nome File per le predizioni.
-	public static final String FILE_PREDICT = "DataPrediction.txt";
+	public static final String FILE_PREDICT = "testLanguage.txt";
 	// Locazioni del bucket nello storage. 
 	public static final String STORAGE_DATA_LOCATION = BUCKET + "/" + FILE_PREDICT;
 

@@ -26,6 +26,7 @@ public class FileUpload extends HttpServlet {
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		try {
+			
 			// Servlet per l'upload.
 			ServletFileUpload upload = new ServletFileUpload();
 			res.setContentType("text/plain");
@@ -36,10 +37,10 @@ public class FileUpload extends HttpServlet {
 				FileItemStream item = iterator.next();
 				InputStream stream = item.openStream();
 				if (!item.isFormField()) {
-					
 					// I file vengono caricati come array di byte.
 					byte[] buffer = new byte[stream.available()];
 					while (stream.read(buffer, 0, buffer.length) != -1) {
+						//System.out.println(buffer);
 						// Serve per vedere se lo ha caricato bene. Quindi lo stampo nella risposta.
 						res.getOutputStream().write(buffer);
 					}
@@ -49,9 +50,10 @@ public class FileUpload extends HttpServlet {
 				    // Scrittura su datastore tramite le JDO.
 			        pm.makePersistent(file);
 				}
+				stream.close();
 			}
 		} catch (Exception ex) {
-			throw new ServletException(ex);
+			res.getOutputStream().println("Internal Error - Error upload.");
 		}
 		
 	    // Faccio il refresh della pagina.
